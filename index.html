@@ -1,85 +1,642 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>支払い管理</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<title>ふたりのアプリ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════
+   RESET & VARIABLES
+═══════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f2f2f7;
+  --bg2:#e5e5ea;
+  --card:#fff;
+  --text:#1c1c1e;
+  --sub:#6b7280;
+  --muted:#aeaeb2;
+  --border:rgba(0,0,0,0.08);
+  --accent:#7c7aff;
+  --accent2:#a78bfa;
+  --green:#34c759;
+  --red:#ff3b30;
+  --orange:#ff9500;
+  --blue:#007aff;
+  --pink:#ff2d55;
+  --r:14px;
+  --r2:20px;
+  --nav:60px;
+  --header:56px;
+}
+html,body{height:100%;background:#c7c7cc;display:flex;justify-content:center;align-items:center;font-family:'Noto Sans JP',sans-serif;-webkit-font-smoothing:antialiased}
+
+/* ═══════════════════════════════════════════
+   PHONE FRAME
+═══════════════════════════════════════════ */
+.phone{
+  width:390px;height:844px;
+  background:var(--bg);border-radius:48px;overflow:hidden;
+  position:relative;
+  box-shadow:0 40px 80px rgba(0,0,0,0.3),0 0 0 1px rgba(0,0,0,0.1);
+  display:flex;flex-direction:column;
+}
+
+/* ═══════════════════════════════════════════
+   SCREENS
+═══════════════════════════════════════════ */
+.screen{
+  display:none;flex-direction:column;
+  flex:1;overflow:hidden;
+  animation:fadeIn .18s ease;
+}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════ */
+.hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:52px 20px 12px;
+  background:var(--bg);flex-shrink:0;
+  border-bottom:.5px solid var(--border);
+}
+.hdr-title{font-size:20px;font-weight:700;color:var(--text)}
+.hdr-actions{display:flex;gap:8px}
+.icon-btn{
+  width:32px;height:32px;border-radius:50%;
+  background:none;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:var(--sub);transition:background .15s;
+}
+.icon-btn:hover{background:var(--border)}
+
+/* ═══════════════════════════════════════════
+   SCROLL AREA
+═══════════════════════════════════════════ */
+.scroll{flex:1;overflow-y:auto;padding:16px 16px 80px;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ═══════════════════════════════════════════
+   SECTION LABEL
+═══════════════════════════════════════════ */
+.sec-label{font-size:12px;font-weight:600;color:var(--sub);letter-spacing:.06em;text-transform:uppercase;padding:12px 4px 6px}
+
+/* ═══════════════════════════════════════════
+   CARD / LIST
+═══════════════════════════════════════════ */
+.card{background:var(--card);border-radius:var(--r);overflow:hidden;margin-bottom:8px}
+.card-row{
+  display:flex;align-items:center;padding:14px 16px;
+  border-bottom:.5px solid var(--border);gap:10px;
+}
+.card-row:last-child{border-bottom:none}
+.row-main{flex:1;min-width:0}
+.row-title{font-size:15px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-sub{font-size:12px;color:var(--sub);margin-top:2px}
+.row-right{text-align:right;flex-shrink:0}
+.amount{font-size:15px;font-weight:600;color:var(--text)}
+.badge{
+  display:inline-block;font-size:11px;font-weight:600;
+  padding:2px 8px;border-radius:10px;
+}
+.badge-red{background:#ffe5e5;color:var(--red)}
+.badge-green{background:#e5f9ec;color:var(--green)}
+.badge-orange{background:#fff3e0;color:var(--orange)}
+
+/* ═══════════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════════ */
+.empty{text-align:center;padding:48px 24px;color:var(--sub)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-text{font-size:14px}
+
+/* ═══════════════════════════════════════════
+   FAB
+═══════════════════════════════════════════ */
+.fab{
+  position:absolute;bottom:calc(var(--nav)+16px);right:16px;
+  width:52px;height:52px;border-radius:50%;
+  background:var(--accent);color:#fff;
+  border:none;cursor:pointer;font-size:24px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(124,122,255,.5);
+  transition:transform .15s;z-index:20;
+}
+.fab:active{transform:scale(.92)}
+.fab.grey{background:#d1d1d6;color:#6e6e73;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+
+/* ═══════════════════════════════════════════
+   BOTTOM NAV
+═══════════════════════════════════════════ */
+.nav{
+  height:var(--nav);background:rgba(250,250,250,.95);
+  border-top:.5px solid var(--border);
+  display:flex;align-items:center;
+  flex-shrink:0;backdrop-filter:blur(20px);
+  position:relative;z-index:30;
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;cursor:pointer;padding:6px 0;
+  border:none;background:none;
+  transition:transform .12s;
+}
+.nav-item:active{transform:scale(.9)}
+.nav-icon{font-size:22px;line-height:1}
+.nav-label{font-size:10px;font-weight:500;color:var(--muted)}
+.nav-item.active .nav-icon{filter:none}
+.nav-item.active .nav-label{color:var(--accent);font-weight:600}
+
+/* ═══════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════ */
+.overlay{
+  position:absolute;inset:0;background:rgba(0,0,0,.45);
+  z-index:100;display:flex;align-items:flex-end;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.overlay.open{opacity:1;pointer-events:all}
+.sheet{
+  width:100%;background:var(--bg);border-radius:24px 24px 0 0;
+  max-height:90%;overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform .3s cubic-bezier(.32,.72,0,1);
+}
+.overlay.open .sheet{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;background:#c7c7cc;border-radius:2px;margin:12px auto 0}
+.sheet-hdr{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 10px}
+.sheet-title{font-size:17px;font-weight:700;color:var(--text)}
+.close-btn{
+  width:28px;height:28px;border-radius:50%;
+  background:#e0e0e5;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;color:var(--sub);
+}
+
+/* ═══════════════════════════════════════════
+   FORM
+═══════════════════════════════════════════ */
+.form-card{background:var(--card);border-radius:var(--r);margin:0 16px 10px;overflow:hidden}
+.form-row{
+  display:flex;align-items:center;padding:13px 16px;
+  border-bottom:.5px solid var(--border);gap:10px;
+}
+.form-row:last-child{border-bottom:none}
+.form-label{font-size:15px;color:var(--text);min-width:80px;flex-shrink:0}
+.form-input{
+  flex:1;border:none;outline:none;
+  font-size:15px;font-family:'Noto Sans JP',sans-serif;
+  color:var(--text);background:transparent;text-align:right;
+}
+.form-input::placeholder{color:#c7c7cc}
+input[type=datetime-local],input[type=date]{color-scheme:light}
+textarea.form-input{text-align:left;resize:none;min-height:60px;padding:4px 0}
+.tgl-grp{display:flex;gap:6px;margin-left:auto}
+.tgl{
+  padding:6px 12px;border-radius:10px;
+  font-size:12px;font-weight:600;
+  font-family:'Noto Sans JP',sans-serif;
+  border:none;cursor:pointer;transition:background .18s,color .18s;
+}
+.tgl-off{background:#e0e0e5;color:var(--sub)}
+.tgl-accent{background:var(--accent);color:#fff}
+.tgl-green{background:var(--green);color:#fff}
+.tgl-red{background:var(--red);color:#fff}
+.tgl-orange{background:var(--orange);color:#fff}
+.submit-btn{
+  display:block;width:calc(100% - 32px);margin:4px 16px 20px;
+  padding:15px;background:var(--accent);color:#fff;
+  border:none;border-radius:var(--r);
+  font-size:16px;font-weight:700;font-family:'Noto Sans JP',sans-serif;
+  cursor:pointer;letter-spacing:.04em;
+  transition:opacity .15s,transform .12s;
+}
+.submit-btn:active{opacity:.85;transform:scale(.98)}
+
+/* ═══════════════════════════════════════════
+   TABS (支払い)
+═══════════════════════════════════════════ */
+.tab-bar{
+  display:flex;gap:8px;padding:0 16px 12px;
+  background:var(--bg);align-items:center;flex-shrink:0;
+}
+.tab-pill{
+  padding:8px 18px;border-radius:20px;
+  font-size:14px;font-weight:500;
+  font-family:'Noto Sans JP',sans-serif;
+  border:none;cursor:pointer;
+  transition:background .2s,color .2s;
+}
+.tab-pill.on{background:var(--accent);color:#fff}
+.tab-pill.off{background:#e0e0e5;color:var(--sub)}
+.tab-arrow{
+  display:flex;align-items:center;justify-content:center;
+  width:28px;height:28px;color:var(--sub);flex-shrink:0;
+  transition:transform .28s cubic-bezier(.34,1.56,.64,1);
+}
+
+/* ═══════════════════════════════════════════
+   HOME SCREEN
+═══════════════════════════════════════════ */
+.home-hero{
+  background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);
+  border-radius:var(--r);padding:20px;margin-bottom:12px;
+  color:#fff;
+}
+.home-hero-label{font-size:11px;font-weight:600;opacity:.8;letter-spacing:.06em;margin-bottom:6px}
+.home-hero-amount{font-size:32px;font-weight:700;margin-bottom:4px}
+.home-hero-sub{font-size:13px;opacity:.8}
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.home-card{
+  background:var(--card);border-radius:var(--r);
+  padding:16px;
+}
+.home-card-icon{font-size:24px;margin-bottom:8px}
+.home-card-label{font-size:11px;color:var(--sub);font-weight:600;letter-spacing:.04em;margin-bottom:4px}
+.home-card-value{font-size:20px;font-weight:700;color:var(--text)}
+.home-card-sub{font-size:11px;color:var(--sub);margin-top:2px}
+.notice-card{
+  background:var(--card);border-radius:var(--r);
+  padding:14px 16px;margin-bottom:6px;
+  display:flex;align-items:center;gap:12px;
+}
+.notice-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+}
+.notice-dot.red{background:var(--red)}
+.notice-dot.orange{background:var(--orange)}
+.notice-dot.blue{background:var(--blue)}
+.notice-text{font-size:13px;color:var(--text);flex:1;line-height:1.5}
+
+/* ═══════════════════════════════════════════
+   WANTS LIST
+═══════════════════════════════════════════ */
+.search-bar{
+  margin:0 0 12px;padding:10px 14px;
+  background:var(--card);border-radius:var(--r);
+  display:flex;align-items:center;gap:8px;
+}
+.search-input{
+  flex:1;border:none;outline:none;
+  font-size:14px;font-family:'Noto Sans JP',sans-serif;
+  background:transparent;color:var(--text);
+}
+.search-input::placeholder{color:var(--muted)}
+.chart-row{
+  display:flex;gap:8px;margin-bottom:12px;
+}
+.chart-box{
+  flex:1;background:var(--card);border-radius:var(--r);
+  padding:14px;display:flex;flex-direction:column;align-items:center;
+}
+.chart-label{font-size:11px;color:var(--sub);font-weight:600;margin-bottom:8px;text-align:center}
+canvas.pie{width:80px!important;height:80px!important}
+
+/* ═══════════════════════════════════════════
+   BINGO
+═══════════════════════════════════════════ */
+.bingo-wrap{
+  background:var(--card);border-radius:20px;
+  padding:16px;margin-bottom:16px;
+  box-shadow:0 2px 12px rgba(0,0,0,.06);
+}
+.bingo-title{
+  font-size:28px;font-weight:900;
+  letter-spacing:.1em;text-align:center;
+  margin-bottom:12px;color:var(--text);
+}
+.bingo-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);
+  gap:3px;
+}
+.bingo-cell{
+  aspect-ratio:1;background:#e5e5ea;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:500;color:var(--sub);
+  cursor:pointer;text-align:center;padding:2px;
+  line-height:1.2;transition:all .15s;overflow:hidden;word-break:break-all;
+}
+.bingo-cell:active{transform:scale(.93)}
+.bingo-cell.cleared{
+  background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);
+  color:#fff;
+}
+.bingo-cell.bingo-line{
+  background:linear-gradient(135deg,#f59e0b 0%,var(--orange) 100%);
+  color:#fff;
+}
+.bingo-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;
+}
+.bingo-nav-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--bg);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:var(--sub);transition:background .15s;
+}
+.bingo-nav-btn:hover{background:var(--border)}
+.bingo-season-label{font-size:15px;font-weight:600;color:var(--text)}
+.bingo-reward{
+  background:var(--card);border-radius:var(--r);
+  padding:16px;
+}
+.reward-title{font-size:13px;font-weight:600;color:var(--sub);margin-bottom:8px}
+.reward-text{font-size:15px;color:var(--text);line-height:1.6}
+.edit-mode-bar{
+  background:var(--orange);color:#fff;
+  padding:8px 16px;text-align:center;font-size:13px;font-weight:600;
+  display:none;
+}
+.edit-mode-bar.show{display:block}
+
+/* ═══════════════════════════════════════════
+   STAMP CARD
+═══════════════════════════════════════════ */
+.stamp-wrap{
+  background:var(--card);border-radius:20px;
+  padding:16px;margin-bottom:16px;
+  box-shadow:0 2px 12px rgba(0,0,0,.06);
+}
+.stamp-header{text-align:center;margin-bottom:12px}
+.stamp-card-title{font-size:16px;font-weight:700;color:var(--text)}
+.stamp-period{font-size:12px;color:var(--sub);margin-top:2px}
+.stamp-grid{
+  display:grid;grid-template-columns:repeat(6,1fr);
+  gap:4px;margin-bottom:12px;
+}
+.stamp-cell{
+  aspect-ratio:1;background:#e5e5ea;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;cursor:pointer;transition:all .15s;
+}
+.stamp-cell:active{transform:scale(.9)}
+.stamp-cell.stamped{background:#fff0f5}
+.stamp-cell.stamped::after{content:'💕'}
+.stamp-cell.empty::after{content:''}
+.stamp-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;
+}
+.stamp-reward{background:var(--card);border-radius:var(--r);padding:16px}
+
+/* ═══════════════════════════════════════════
+   DETAIL SHEET
+═══════════════════════════════════════════ */
+.detail-section{padding:0 16px 8px}
+.detail-title{font-size:20px;font-weight:700;color:var(--text);padding:4px 0 12px}
+.detail-row{
+  display:flex;justify-content:space-between;
+  padding:10px 0;border-bottom:.5px solid var(--border);
+  font-size:14px;
+}
+.detail-row:last-child{border-bottom:none}
+.detail-key{color:var(--sub)}
+.detail-val{color:var(--text);font-weight:500;text-align:right;max-width:220px;word-break:break-all}
+.danger-btn{
+  display:block;width:calc(100% - 32px);margin:8px 16px 20px;
+  padding:13px;background:#ffe5e5;color:var(--red);
+  border:none;border-radius:var(--r);
+  font-size:15px;font-weight:600;font-family:'Noto Sans JP',sans-serif;
+  cursor:pointer;
+}
+</style>
 </head>
 <body>
 <div class="phone">
 
-  <!-- Top tabs -->
-  <div class="top-tabs">
-    <button class="tab-btn is-active" id="tabA" onclick="switchPage('A')">テキスト</button>
-    <div class="tab-arrow" id="arrowEl">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="3" y1="10" x2="17" y2="10"/>
-        <polyline points="12 5 17 10 12 15"/>
+<!-- ═══════════ HOME ═══════════ -->
+<div class="screen active" id="sc-home">
+  <div class="hdr">
+    <div class="hdr-title">ふたりのアプリ 🏠</div>
+  </div>
+  <div class="scroll" id="home-scroll"></div>
+</div>
+
+<!-- ═══════════ PAYMENT ═══════════ -->
+<div class="screen" id="sc-pay">
+  <div class="hdr">
+    <div class="hdr-title">支払い管理</div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-pill on" id="payTabA" onclick="switchPayTab('A')">自分 (A)</button>
+    <div class="tab-arrow" id="payArrow">
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="10" x2="17" y2="10"/><polyline points="12 5 17 10 12 15"/>
       </svg>
     </div>
-    <button class="tab-btn is-inactive" id="tabB" onclick="switchPage('B')">テキスト</button>
+    <button class="tab-pill off" id="payTabB" onclick="switchPayTab('B')">相手 (B)</button>
   </div>
+  <div class="scroll" id="pay-scroll"></div>
+  <button class="fab" onclick="openPayModal()">＋</button>
+</div>
 
-  <!-- Scroll area -->
-  <div class="scroll-area" id="scrollArea"></div>
-
-  <!-- FAB -->
-  <button class="fab" onclick="openModal()">＋</button>
-
-  <!-- Bottom bar -->
-  <div class="bottom-bar">メニューバー</div>
-
-  <!-- ── Add modal ── -->
-  <div class="modal-overlay" id="modalOverlay" onclick="bgClose(event)">
-    <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <span class="modal-title">支払いを追加</span>
-        <button class="modal-close" onclick="closeModal()">✕</button>
-      </div>
-
-      <!-- 基本情報 -->
-      <div class="form-section">
-        <div class="form-row">
-          <span class="form-label">日時</span>
-          <input class="form-input" type="datetime-local" id="inputDate" />
-        </div>
-        <div class="form-row">
-          <span class="form-label">金額</span>
-          <input class="form-input" type="number" id="inputAmount" placeholder="0" min="0" />
-          <span style="font-size:15px;color:var(--text-secondary);flex-shrink:0;">円</span>
-        </div>
-        <div class="form-row">
-          <span class="form-label">メモ</span>
-          <input class="form-input" type="text" id="inputMemo" placeholder="任意" />
-        </div>
-      </div>
-
-      <!-- 対象・状態 -->
-      <div class="form-section">
-        <div class="form-row">
-          <span class="form-label">対象者</span>
-          <div class="toggle-group">
-            <button class="tgl tgl-purple" id="tgtA" onclick="setTarget('A')">自分</button>
-            <button class="tgl tgl-off"    id="tgtB" onclick="setTarget('B')">相手</button>
-          </div>
-        </div>
-        <div class="form-row">
-          <span class="form-label">状態</span>
-          <div class="toggle-group">
-            <button class="tgl tgl-red"   id="stUnpaid" onclick="setState('unpaid')">未支払い</button>
-            <button class="tgl tgl-off"   id="stPaid"   onclick="setState('paid')">支払い済み</button>
-          </div>
-        </div>
-      </div>
-
-      <button class="submit-btn" onclick="submitEntry()">追加する</button>
+<!-- ═══════════ WANTS ═══════════ -->
+<div class="screen" id="sc-wants">
+  <div class="hdr">
+    <div class="hdr-title">やりたいことリスト</div>
+    <div class="hdr-actions">
+      <button class="icon-btn" onclick="showScreen('sc-bingo')" title="ビンゴ">⬛</button>
     </div>
   </div>
-
+  <div class="scroll" id="wants-scroll"></div>
+  <button class="fab" onclick="openWantsModal()">＋</button>
 </div>
-<script src="script.js"></script>
+
+<!-- ═══════════ BINGO ═══════════ -->
+<div class="screen" id="sc-bingo">
+  <div class="hdr">
+    <div class="hdr-title">ビンゴカード</div>
+    <div class="hdr-actions">
+      <button class="icon-btn" id="bingoEditBtn" onclick="toggleBingoEdit()">✏️</button>
+      <button class="icon-btn" onclick="showScreen('sc-wants')">↩</button>
+    </div>
+  </div>
+  <div class="edit-mode-bar" id="editModeBar">編集モード — マスをタップしてやりたいことを設定</div>
+  <div class="scroll" id="bingo-scroll"></div>
+</div>
+
+<!-- ═══════════ STAMP ═══════════ -->
+<div class="screen" id="sc-stamp">
+  <div class="hdr">
+    <div class="hdr-title">スタンプカード</div>
+  </div>
+  <div class="scroll" id="stamp-scroll"></div>
+  <button class="fab grey" id="stampFab" onclick="pressStamp()">🔖</button>
+</div>
+
+<!-- ═══════════ BOTTOM NAV ═══════════ -->
+<nav class="nav">
+  <button class="nav-item active" id="nav-home" onclick="showScreen('sc-home')">
+    <span class="nav-icon">🏠</span><span class="nav-label">ホーム</span>
+  </button>
+  <button class="nav-item" id="nav-pay" onclick="showScreen('sc-pay')">
+    <span class="nav-icon">💰</span><span class="nav-label">支払い</span>
+  </button>
+  <button class="nav-item" id="nav-wants" onclick="showScreen('sc-wants')">
+    <span class="nav-icon">📋</span><span class="nav-label">やりたい</span>
+  </button>
+  <button class="nav-item" id="nav-stamp" onclick="showScreen('sc-stamp')">
+    <span class="nav-icon">🔖</span><span class="nav-label">スタンプ</span>
+  </button>
+</nav>
+
+<!-- ═══════════ MODALS ═══════════ -->
+
+<!-- 支払い追加 -->
+<div class="overlay" id="payModal" onclick="overlayClose(event,'payModal')">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <span class="sheet-title">支払いを追加</span>
+    <button class="close-btn" onclick="closeModal('payModal')">✕</button>
+  </div>
+  <div class="form-card">
+    <div class="form-row"><span class="form-label">発生日時</span><input class="form-input" type="datetime-local" id="p-date"/></div>
+    <div class="form-row"><span class="form-label">金額</span><input class="form-input" type="number" id="p-amount" placeholder="0" min="1"/><span style="color:var(--sub);font-size:14px">円</span></div>
+    <div class="form-row"><span class="form-label">メモ</span><input class="form-input" type="text" id="p-memo" placeholder="任意"/></div>
+  </div>
+  <div class="form-card">
+    <div class="form-row">
+      <span class="form-label">支払者</span>
+      <div class="tgl-grp">
+        <button class="tgl tgl-accent" id="p-tgtA" onclick="setPayTarget('A')">自分(A)</button>
+        <button class="tgl tgl-off"    id="p-tgtB" onclick="setPayTarget('B')">相手(B)</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <span class="form-label">状態</span>
+      <div class="tgl-grp">
+        <button class="tgl tgl-red"   id="p-unpaid" onclick="setPayState('unpaid')">未支払い</button>
+        <button class="tgl tgl-off"   id="p-paid"   onclick="setPayState('paid')">支払済み</button>
+      </div>
+    </div>
+  </div>
+  <button class="submit-btn" onclick="submitPay()">追加する</button>
+</div>
+</div>
+
+<!-- 支払い詳細 -->
+<div class="overlay" id="payDetailModal" onclick="overlayClose(event,'payDetailModal')">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <span class="sheet-title">支払い詳細</span>
+    <button class="close-btn" onclick="closeModal('payDetailModal')">✕</button>
+  </div>
+  <div id="payDetailContent" class="detail-section"></div>
+  <button class="danger-btn" id="payDeleteBtn">🗑 削除する</button>
+</div>
+</div>
+
+<!-- やりたいこと追加 -->
+<div class="overlay" id="wantsModal" onclick="overlayClose(event,'wantsModal')">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <span class="sheet-title">やりたいことを追加</span>
+    <button class="close-btn" onclick="closeModal('wantsModal')">✕</button>
+  </div>
+  <div class="form-card">
+    <div class="form-row"><span class="form-label">タイトル</span><input class="form-input" type="text" id="w-title" placeholder="例：花畑へ行く"/></div>
+    <div class="form-row"><span class="form-label">登録日</span><input class="form-input" type="date" id="w-regdate"/></div>
+    <div class="form-row"><span class="form-label">イベント期間</span><input class="form-input" type="text" id="w-period" placeholder="例：2026/4/1〜4/30"/></div>
+    <div class="form-row"><span class="form-label">URL</span><input class="form-input" type="url" id="w-url" placeholder="https://..."/></div>
+    <div class="form-row"><span class="form-label">メモ</span><textarea class="form-input" id="w-memo" placeholder="任意"></textarea></div>
+  </div>
+  <div class="form-card">
+    <div class="form-row">
+      <span class="form-label">登録者</span>
+      <div class="tgl-grp">
+        <button class="tgl tgl-accent" id="w-regA" onclick="setWantsReg('A')">自分(A)</button>
+        <button class="tgl tgl-off"    id="w-regB" onclick="setWantsReg('B')">相手(B)</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <span class="form-label">状態</span>
+      <div class="tgl-grp">
+        <button class="tgl tgl-orange" id="w-pending"  onclick="setWantsState('pending')">未実行</button>
+        <button class="tgl tgl-off"    id="w-done"     onclick="setWantsState('done')">実行済み</button>
+      </div>
+    </div>
+  </div>
+  <button class="submit-btn" onclick="submitWants()">追加する</button>
+</div>
+</div>
+
+<!-- やりたいこと詳細 -->
+<div class="overlay" id="wantsDetailModal" onclick="overlayClose(event,'wantsDetailModal')">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <span class="sheet-title">詳細</span>
+    <button class="close-btn" onclick="closeModal('wantsDetailModal')">✕</button>
+  </div>
+  <div id="wantsDetailContent" class="detail-section"></div>
+  <button class="submit-btn" id="wantsToggleBtn" style="background:var(--green)">✅ 実行済みにする</button>
+  <button class="danger-btn" id="wantsDeleteBtn">🗑 削除する</button>
+</div>
+</div>
+
+<!-- ビンゴセル選択 -->
+<div class="overlay" id="bingoCellModal" onclick="overlayClose(event,'bingoCellModal')">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <span class="sheet-title">マスに設定</span>
+    <button class="close-btn" onclick="closeModal('bingoCellModal')">✕</button>
+  </div>
+  <div id="bingoCellList" class="scroll" style="max-height:400px;padding:8px 16px 20px"></div>
+</div>
+</div>
+
+<!-- ビンゴ詳細（閲覧） -->
+<div class="overlay" id="bingoCellViewModal" onclick="overlayClose(event,'bingoCellViewModal')">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <span class="sheet-title">マス詳細</span>
+    <button class="close-btn" onclick="closeModal('bingoCellViewModal')">✕</button>
+  </div>
+  <div id="bingoCellViewContent" class="detail-section"></div>
+</div>
+</div>
+
+<!-- スタンプ報酬編集 -->
+<div class="overlay" id="stampRewardModal" onclick="overlayClose(event,'stampRewardModal')">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <span class="sheet-title">スタンプ報酬を編集</span>
+    <button class="close-btn" onclick="closeModal('stampRewardModal')">✕</button>
+  </div>
+  <div class="form-card">
+    <div class="form-row"><span class="form-label">報酬内容</span><textarea class="form-input" id="sr-text" rows="3" placeholder="例：デートプランを相手が決める"></textarea></div>
+  </div>
+  <button class="submit-btn" onclick="saveStampReward()">保存する</button>
+</div>
+</div>
+
+<!-- ビンゴ報酬編集 -->
+<div class="overlay" id="bingoRewardModal" onclick="overlayClose(event,'bingoRewardModal')">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <span class="sheet-title">ビンゴ報酬を編集</span>
+    <button class="close-btn" onclick="closeModal('bingoRewardModal')">✕</button>
+  </div>
+  <div class="form-card">
+    <div class="form-row"><span class="form-label">報酬内容</span><textarea class="form-input" id="br-text" rows="3" placeholder="例：好きなレストランへのディナー"></textarea></div>
+  </div>
+  <button class="submit-btn" onclick="saveBingoReward()">保存する</button>
+</div>
+</div>
+
+</div><!-- /phone -->
+
+<script src="app.js"></script>
 </body>
 </html>
