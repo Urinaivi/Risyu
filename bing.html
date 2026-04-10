@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<title>ビンゴカード</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f2f2f7;
+  --card:#fff;
+  --text:#1c1c1e;
+  --sub:#6b7280;
+  --muted:#aeaeb2;
+  --border:rgba(0,0,0,0.07);
+  --accent:#7c7aff;
+  --green:#34c759;
+  --red:#ff3b30;
+  --orange:#ff9500;
+  --gold:#f59e0b;
+  --r:14px;
+  --nav:62px;
+}
+html,body{
+  height:100%;background:#c9c9ce;
+  display:flex;justify-content:center;align-items:center;
+  font-family:'Noto Sans JP',sans-serif;-webkit-font-smoothing:antialiased;
+}
+.phone{
+  width:390px;height:844px;background:var(--bg);border-radius:48px;overflow:hidden;
+  position:relative;display:flex;flex-direction:column;
+  box-shadow:0 40px 80px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.09);
+}
+
+/* ─── Header ─── */
+.hdr{
+  padding:52px 20px 10px;background:var(--bg);flex-shrink:0;
+  display:flex;align-items:flex-end;justify-content:space-between;
+}
+.hdr-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.3px}
+.hdr-acts{display:flex;gap:6px;align-items:center}
+.hdr-btn{
+  width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;
+  background:none;display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:var(--sub);transition:background .15s;
+}
+.hdr-btn:active{background:var(--border)}
+.edit-badge{
+  font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;
+  background:var(--orange);color:#fff;display:none;
+}
+.edit-badge.show{display:inline-block}
+
+/* ─── Edit mode bar ─── */
+.edit-bar{
+  background:var(--orange);color:#fff;
+  padding:8px 16px;text-align:center;font-size:13px;font-weight:600;
+  flex-shrink:0;display:none;letter-spacing:.02em;
+}
+.edit-bar.show{display:block}
+
+/* ─── Scroll ─── */
+.scroll{flex:1;overflow-y:auto;padding:12px 14px 20px;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ─── Season Nav ─── */
+.season-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;
+}
+.nav-arrow{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--card);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;color:var(--sub);
+  box-shadow:0 1px 6px rgba(0,0,0,.08);
+  transition:background .15s,transform .1s;
+}
+.nav-arrow:active{transform:scale(.88)}
+.nav-arrow:disabled{opacity:.28;cursor:default}
+.season-label-wrap{text-align:center}
+.season-label{font-size:16px;font-weight:700;color:var(--text)}
+.season-period{font-size:11px;color:var(--sub);margin-top:2px}
+.expired-tag{
+  display:inline-block;font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:10px;background:#f0f0f5;color:var(--muted);
+  margin-top:4px;
+}
+
+/* ─── Bingo Card ─── */
+.bingo-wrap{
+  background:var(--card);border-radius:20px;
+  padding:16px;margin-bottom:12px;
+  box-shadow:0 2px 14px rgba(0,0,0,.07);
+  position:relative;
+}
+.bingo-title{
+  font-size:30px;font-weight:900;letter-spacing:.12em;
+  text-align:center;margin-bottom:12px;color:var(--text);
+}
+.bingo-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:4px;
+}
+.bingo-cell{
+  aspect-ratio:1;border-radius:7px;background:#f0f0f5;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9.5px;font-weight:500;color:var(--sub);
+  cursor:pointer;text-align:center;padding:3px;
+  line-height:1.25;transition:all .15s;overflow:hidden;
+  word-break:break-all;
+  -webkit-tap-highlight-color:transparent;
+}
+.bingo-cell:active{transform:scale(.9)}
+.bingo-cell.empty-cell{color:var(--muted);font-size:18px}
+/* クリア済み */
+.bingo-cell.cleared{
+  background:linear-gradient(135deg,var(--accent) 0%,#a78bfa 100%);
+  color:#fff;font-weight:600;
+}
+/* ビンゴライン */
+.bingo-cell.bingo-line{
+  background:linear-gradient(135deg,var(--gold) 0%,var(--orange) 100%);
+  color:#fff;font-weight:700;
+}
+/* 編集モード中のホバー */
+.bingo-cell.edit-hover{
+  background:#e8e5ff;border:1.5px dashed var(--accent);
+}
+
+/* ─── Bingo Count ─── */
+.bingo-count{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-top:10px;
+}
+.bingo-chip{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:5px 12px;border-radius:20px;
+  background:linear-gradient(135deg,var(--gold),var(--orange));
+  color:#fff;font-size:12px;font-weight:700;
+}
+.clear-count{
+  font-size:12px;color:var(--sub);
+}
+
+/* ─── 達成バナー ─── */
+.bingo-banner{
+  background:linear-gradient(135deg,var(--gold),var(--orange));
+  border-radius:12px;padding:14px;margin-bottom:12px;
+  text-align:center;color:#fff;
+}
+.bingo-banner-title{font-size:16px;font-weight:700;margin-bottom:3px}
+.bingo-banner-sub{font-size:12px;opacity:.9}
+
+/* ─── Reward ─── */
+.reward-card{
+  background:var(--card);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;
+}
+.reward-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;
+}
+.reward-label{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.05em}
+.reward-edit-btn{
+  font-size:12px;color:var(--accent);background:none;
+  border:none;cursor:pointer;font-weight:600;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.reward-text{font-size:15px;color:var(--text);line-height:1.6}
+
+/* ─── Bottom Nav ─── */
+.nav{
+  height:var(--nav);background:rgba(250,250,250,.96);
+  border-top:.5px solid var(--border);display:flex;align-items:center;
+  flex-shrink:0;backdrop-filter:blur(20px);z-index:30;
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;cursor:pointer;padding:6px 0;
+  border:none;background:none;-webkit-tap-highlight-color:transparent;
+  transition:transform .1s;
+}
+.nav-item:active{transform:scale(.88)}
+.nav-icon{font-size:22px;line-height:1}
+.nav-lbl{font-size:10px;font-weight:500;color:var(--muted)}
+.nav-item.active .nav-lbl{color:var(--accent);font-weight:700}
+
+/* ─── Overlay / Sheet ─── */
+.overlay{
+  position:absolute;inset:0;background:rgba(0,0,0,.42);
+  z-index:100;display:flex;align-items:flex-end;
+  opacity:0;pointer-events:none;transition:opacity .22s;
+}
+.overlay.open{opacity:1;pointer-events:all}
+.sheet{
+  width:100%;background:var(--bg);border-radius:24px 24px 0 0;
+  transform:translateY(100%);max-height:90%;overflow-y:auto;
+  transition:transform .3s cubic-bezier(.32,.72,0,1);
+}
+.overlay.open .sheet{transform:translateY(0)}
+.sh-handle{width:36px;height:4px;background:#c7c7cc;border-radius:2px;margin:12px auto 0}
+.sh-hdr{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 10px}
+.sh-title{font-size:17px;font-weight:700;color:var(--text)}
+.x-btn{
+  width:28px;height:28px;border-radius:50%;background:#e4e4e9;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--sub);
+}
+
+/* ─── Form ─── */
+.f-card{background:var(--card);border-radius:var(--r);margin:0 14px 10px;overflow:hidden}
+.f-row{display:flex;align-items:flex-start;padding:13px 16px;border-bottom:.5px solid var(--border);gap:10px}
+.f-row:last-child{border-bottom:none}
+.f-lbl{font-size:15px;color:var(--text);min-width:72px;flex-shrink:0;padding-top:2px}
+.f-inp{
+  flex:1;border:none;outline:none;font-size:15px;resize:none;
+  font-family:'Noto Sans JP',sans-serif;color:var(--text);
+  background:transparent;text-align:left;line-height:1.6;
+}
+.f-inp::placeholder{color:#c7c7cc}
+.ok-btn{
+  display:block;width:calc(100% - 28px);margin:2px 14px 22px;
+  padding:15px;background:var(--accent);color:#fff;
+  border:none;border-radius:var(--r);font-size:16px;font-weight:700;
+  font-family:'Noto Sans JP',sans-serif;cursor:pointer;letter-spacing:.04em;
+  transition:opacity .15s,transform .12s;
+}
+.ok-btn:active{opacity:.82;transform:scale(.98)}
+.ok-btn.danger{background:var(--red)}
+
+/* ─── Wants Picker ─── */
+.pick-item{
+  display:flex;align-items:center;padding:13px 16px;
+  border-bottom:.5px solid var(--border);gap:10px;
+  cursor:pointer;transition:background .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.pick-item:last-child{border-bottom:none}
+.pick-item:active{background:#f5f5fa}
+.pick-main{flex:1;min-width:0}
+.pick-title{font-size:15px;font-weight:500;color:var(--text)}
+.pick-sub{font-size:12px;color:var(--sub);margin-top:2px}
+.pick-clear{
+  width:100%;padding:13px 16px;text-align:center;
+  font-size:14px;font-weight:600;color:var(--red);
+  background:none;border:none;cursor:pointer;font-family:'Noto Sans JP',sans-serif;
+}
+
+/* ─── Cell Detail ─── */
+.det-row{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:12px 16px;border-bottom:.5px solid var(--border);font-size:14px;gap:12px;
+}
+.det-row:last-child{border-bottom:none}
+.det-k{color:var(--sub);flex-shrink:0}
+.det-v{color:var(--text);font-weight:500;text-align:right;word-break:break-all;max-width:220px}
+
+/* ─── Animations ─── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .2s ease}
+@keyframes bingoPop{
+  0%{transform:scale(1)}40%{transform:scale(1.18)}70%{transform:scale(.94)}100%{transform:scale(1)}
+}
+.bingo-pop{animation:bingoPop .4s ease}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-title">ビンゴカード</div>
+    <div class="hdr-acts">
+      <span class="edit-badge" id="editBadge">編集中</span>
+      <button class="hdr-btn" id="editBtn" onclick="toggleEdit()" title="編集モード切替">✏️</button>
+      <button class="hdr-btn" onclick="goBack()" title="やりたいことリストへ戻る">↩</button>
+    </div>
+  </div>
+
+  <!-- Edit mode bar -->
+  <div class="edit-bar" id="editBar">✏️ 編集モード — マスをタップしてやりたいことを設定</div>
+
+  <!-- Scroll -->
+  <div class="scroll" id="scroll"></div>
+
+  <!-- Bottom Nav -->
+  <nav class="nav">
+    <button class="nav-item" onclick="alert('ホームは別途作成予定')">
+      <span class="nav-icon">🏠</span><span class="nav-lbl">ホーム</span>
+    </button>
+    <button class="nav-item" onclick="alert('支払い管理は01_payment.htmlを参照')">
+      <span class="nav-icon">💰</span><span class="nav-lbl">支払い</span>
+    </button>
+    <button class="nav-item active">
+      <span class="nav-icon">📋</span><span class="nav-lbl">やりたい</span>
+    </button>
+    <button class="nav-item" onclick="alert('スタンプカードは03_stamp.htmlを参照')">
+      <span class="nav-icon">🔖</span><span class="nav-lbl">スタンプ</span>
+    </button>
+  </nav>
+
+  <!-- ── やりたいこと選択モーダル ── -->
+  <div class="overlay" id="pickerModal" onclick="bgClose(event,'pickerModal')">
+    <div class="sheet">
+      <div class="sh-handle"></div>
+      <div class="sh-hdr">
+        <span class="sh-title">やりたいことを選択</span>
+        <button class="x-btn" onclick="closeM('pickerModal')">✕</button>
+      </div>
+      <div id="pickerList" style="padding:0 14px 8px"></div>
+    </div>
+  </div>
+
+  <!-- ── セル詳細モーダル (閲覧) ── -->
+  <div class="overlay" id="cellViewModal" onclick="bgClose(event,'cellViewModal')">
+    <div class="sheet">
+      <div class="sh-handle"></div>
+      <div class="sh-hdr">
+        <span class="sh-title">マス詳細</span>
+        <button class="x-btn" onclick="closeM('cellViewModal')">✕</button>
+      </div>
+      <div id="cellViewBody"></div>
+    </div>
+  </div>
+
+  <!-- ── 報酬編集モーダル ── -->
+  <div class="overlay" id="rewardModal" onclick="bgClose(event,'rewardModal')">
+    <div class="sheet">
+      <div class="sh-handle"></div>
+      <div class="sh-hdr">
+        <span class="sh-title">ビンゴ報酬を編集</span>
+        <button class="x-btn" onclick="closeM('rewardModal')">✕</button>
+      </div>
+      <div class="f-card">
+        <div class="f-row">
+          <span class="f-lbl">報酬内容</span>
+          <textarea class="f-inp" id="rewardInput" rows="3" placeholder="例：好きなレストランへのディナー 🍽️"></textarea>
+        </div>
+      </div>
+      <button class="ok-btn" onclick="saveReward()">保存する</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   CONSTANTS & SEASON DEFINITION
+═══════════════════════════════════════════ */
+const BINGO_STORE  = 'bingo_v1';
+const WANTS_STORE  = 'wants_v1';
+const REWARD_STORE = 'bingo_reward_v1';
+
+// シーズン定義: start/end は月-日
+const SEASON_DEFS = [
+  { key:'spring', emoji:'🌸', label:'春', start:'03-01', end:'05-31' },
+  { key:'summer', emoji:'🌻', label:'夏', start:'06-01', end:'08-31' },
+  { key:'autumn', emoji:'🍂', label:'秋', start:'09-01', end:'11-30' },
+  { key:'winter', emoji:'❄️', label:'冬', start:'12-01', end:'02-28' },
+];
+
+// ビンゴ判定ライン（インデックス）
+const BINGO_LINES = [
+  [0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24], // 横
+  [0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24], // 縦
+  [0,6,12,18,24],[4,8,12,16,20],                                               // 斜め
+];
+
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+let bingoData  = loadBingo();   // { seasons: [ SeasonCard ] }
+let wantsItems = loadWants();   // やりたいことリスト
+let reward     = localStorage.getItem(REWARD_STORE) || '好きなレストランへのディナー 🍽️';
+let seasonIdx  = 0;             // 表示中シーズンのインデックス
+let editMode   = false;
+let pickerCellIdx = -1;         // 選択中のセルインデックス
+
+/* SeasonCard: {
+    id, year, seasonKey, label, start(YYYY-MM-DD), end(YYYY-MM-DD),
+    cells: [25 items | null],  // null=空, { wantsId, title, cleared }
+    generatedAt
+  }
+*/
+
+/* ═══════════════════════════════════════════
+   LOAD / SAVE
+═══════════════════════════════════════════ */
+function loadBingo() {
+  try {
+    const d = JSON.parse(localStorage.getItem(BINGO_STORE));
+    if (d && Array.isArray(d.seasons)) return d;
+  } catch {}
+  return { seasons: [] };
+}
+function loadWants() {
+  try {
+    const d = JSON.parse(localStorage.getItem(WANTS_STORE));
+    if (Array.isArray(d)) return d;
+  } catch {}
+  // サンプルデータ（02_wants.html と共有されていない場合のフォールバック）
+  return [
+    { id:'w1', title:'花畑へ行く',  registrar:'A', status:'pending', regDate:'2026-03-02' },
+    { id:'w2', title:'水族館デート', registrar:'B', status:'pending', regDate:'2026-03-02' },
+    { id:'w3', title:'お化け屋敷',   registrar:'A', status:'pending', regDate:'2026-03-02' },
+    { id:'w4', title:'動物園',       registrar:'B', status:'done',    regDate:'2026-03-02', doneDate:'2026-03-15' },
+    { id:'w5', title:'映画鑑賞',     registrar:'A', status:'done',    regDate:'2026-02-10', doneDate:'2026-02-20' },
+  ];
+}
+function persist() { localStorage.setItem(BINGO_STORE, JSON.stringify(bingoData)); }
+
+/* ═══════════════════════════════════════════
+   SEASON MANAGEMENT
+═══════════════════════════════════════════ */
+function buildSeasonDates(year, def) {
+  // winter は翌年2月末まで
+  const endYear = def.key === 'winter' ? year + 1 : year;
+  const endDay  = def.key === 'winter' ? leapEnd(endYear) : def.end;
+  return {
+    start: `${year}-${def.start}`,
+    end:   `${endYear}-${endDay}`,
+  };
+}
+function leapEnd(year) {
+  // 2月末日（うるう年対応）
+  return new Date(year, 2, 0).getDate() === 29 ? '02-29' : '02-28';
+}
+
+// 現在〜前後の年を含む全シーズンを生成・補完
+function ensureSeasons() {
+  const now  = new Date();
+  const thisY = now.getFullYear();
+  const years = [thisY - 1, thisY, thisY + 1];
+
+  years.forEach(y => {
+    SEASON_DEFS.forEach(def => {
+      const id = `${y}-${def.key}`;
+      if (!bingoData.seasons.find(s => s.id === id)) {
+        const dates = buildSeasonDates(y, def);
+        bingoData.seasons.push({
+          id, year: y, seasonKey: def.key,
+          label: `${y}年 ${def.emoji}${def.label}`,
+          start: dates.start, end: dates.end,
+          cells: Array(25).fill(null),
+          generatedAt: new Date().toISOString(),
+        });
+      }
+    });
+  });
+
+  // 日付順にソート
+  bingoData.seasons.sort((a,b) => a.start.localeCompare(b.start));
+
+  // 3年超のカードを削除
+  const y3 = 3 * 365 * 24 * 60 * 60 * 1000;
+  bingoData.seasons = bingoData.seasons.filter(s =>
+    Date.now() - new Date(s.generatedAt).getTime() < y3
+  );
+
+  persist();
+}
+
+function isExpired(season) {
+  return new Date() > new Date(season.end + 'T23:59:59');
+}
+function isActive(season) {
+  const now = new Date();
+  return now >= new Date(season.start) && now <= new Date(season.end + 'T23:59:59');
+}
+
+// 現在のシーズンのインデックスを返す
+function currentSeasonIdx() {
+  const idx = bingoData.seasons.findIndex(s => isActive(s));
+  return idx >= 0 ? idx : Math.max(0, bingoData.seasons.findIndex(s => !isExpired(s)));
+}
+
+/* ═══════════════════════════════════════════
+   BINGO LOGIC
+═══════════════════════════════════════════ */
+// やりたいことのdone状態をセルに同期
+function syncCells(season) {
+  wantsItems = loadWants(); // 最新を取得
+  season.cells.forEach((cell, i) => {
+    if (cell && cell.wantsId) {
+      const w = wantsItems.find(x => x.id === cell.wantsId);
+      if (w) season.cells[i] = { ...cell, cleared: w.status === 'done' };
+    }
+  });
+}
+
+// ビンゴになっているラインを返す
+function getBingoLines(cells) {
+  return BINGO_LINES.filter(line => line.every(i => cells[i] && cells[i].cleared));
+}
+
+// ビンゴしているセルインデックスのセット
+function getBingoSet(cells) {
+  return new Set(getBingoLines(cells).flat());
+}
+
+/* ═══════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════ */
+function render() {
+  const el = document.getElementById('scroll');
+  if (!bingoData.seasons.length) {
+    el.innerHTML = '<div style="text-align:center;padding:48px;color:var(--muted)">シーズンデータなし</div>';
+    return;
+  }
+
+  const season  = bingoData.seasons[seasonIdx];
+  const expired = isExpired(season);
+  const active  = isActive(season);
+
+  // 期限切れシーズンでは編集モード強制解除
+  if (expired && editMode) { editMode = false; }
+
+  // 編集ボタン制御
+  document.getElementById('editBtn').style.display  = expired ? 'none' : 'flex';
+  document.getElementById('editBar').className       = 'edit-bar' + (editMode && !expired ? ' show' : '');
+  document.getElementById('editBadge').className     = 'edit-badge' + (editMode && !expired ? ' show' : '');
+
+  syncCells(season);
+  const bingoSet  = getBingoSet(season.cells);
+  const bingoCount = getBingoLines(season.cells).length;
+  const cleared   = season.cells.filter(c => c && c.cleared).length;
+
+  // グリッド
+  const gridHTML = season.cells.map((cell, i) => {
+    let cls = 'bingo-cell';
+    if (bingoSet.has(i)) cls += ' bingo-line';
+    else if (cell && cell.cleared) cls += ' cleared';
+    else if (!cell && editMode && !expired) cls += ' empty-cell edit-hover';
+    else if (!cell) cls += ' empty-cell';
+    if (editMode && !expired) cls += ' edit-hover';
+
+    const label = cell
+      ? (cell.title.length > 10 ? cell.title.slice(0, 9) + '…' : cell.title)
+      : (editMode ? '＋' : '');
+
+    return `<div class="${cls}" onclick="cellTap(${i})">${label}</div>`;
+  }).join('');
+
+  // ビンゴバナー
+  const bingoHTML = bingoCount > 0 ? `
+    <div class="bingo-banner bingo-pop">
+      <div class="bingo-banner-title">🎉 ${bingoCount}ライン ビンゴ達成！</div>
+      <div class="bingo-banner-sub">報酬をゲットしよう！</div>
+    </div>` : '';
+
+  // ビンゴカウント表示
+  const countHTML = `
+    <div class="bingo-count">
+      ${bingoCount > 0 ? `<div class="bingo-chip">🎯 ${bingoCount} BINGO!</div>` : ''}
+      <div class="clear-count">${cleared} / 25 マスクリア</div>
+    </div>`;
+
+  // シーズンタグ
+  const tag = expired ? '<div class="expired-tag">終了済み</div>'
+    : active ? '' : '';
+
+  el.innerHTML = `
+    <div class="season-nav">
+      <button class="nav-arrow" onclick="moveSeason(-1)" ${seasonIdx===0?'disabled':''}>‹</button>
+      <div class="season-label-wrap">
+        <div class="season-label">${season.label}</div>
+        <div class="season-period">${fmtDate(season.start)} 〜 ${fmtDate(season.end)}</div>
+        ${tag}
+      </div>
+      <button class="nav-arrow" onclick="moveSeason(1)" ${seasonIdx===bingoData.seasons.length-1?'disabled':''}>›</button>
+    </div>
+
+    <div class="bingo-wrap fade-in">
+      <div class="bingo-title">BINGO</div>
+      <div class="bingo-grid">${gridHTML}</div>
+      ${countHTML}
+    </div>
+
+    ${bingoHTML}
+
+    <div class="reward-card">
+      <div class="reward-header">
+        <span class="reward-label">ビンゴ報酬について</span>
+        <button class="reward-edit-btn" onclick="openRewardModal()">✏️ 編集</button>
+      </div>
+      <div class="reward-text">${reward}</div>
+    </div>
+
+    <div style="height:6px"></div>
+  `;
+}
+
+/* ═══════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════ */
+function moveSeason(dir) {
+  seasonIdx = Math.max(0, Math.min(bingoData.seasons.length - 1, seasonIdx + dir));
+  render();
+}
+
+/* ═══════════════════════════════════════════
+   EDIT MODE
+═══════════════════════════════════════════ */
+function toggleEdit() {
+  const season = bingoData.seasons[seasonIdx];
+  if (isExpired(season)) return;
+  editMode = !editMode;
+  render();
+}
+
+/* ═══════════════════════════════════════════
+   CELL TAP
+═══════════════════════════════════════════ */
+function cellTap(idx) {
+  const season  = bingoData.seasons[seasonIdx];
+  const expired = isExpired(season);
+  const cell    = season.cells[idx];
+
+  if (editMode && !expired) {
+    // 編集モード: やりたいこと選択ピッカーを開く
+    pickerCellIdx = idx;
+    openPicker(cell);
+  } else {
+    // 閲覧モード: 詳細を表示
+    if (!cell) return;
+    showCellDetail(cell, idx);
+  }
+}
+
+/* ─── Picker ─── */
+function openPicker(currentCell) {
+  const all = wantsItems;
+  if (!all.length) { alert('やりたいことリストが空です\n先に02_wants.htmlでデータを追加してください'); return; }
+
+  const itemsHTML = all.map(w => `
+    <div class="pick-item" onclick="pickWants('${w.id}')">
+      <div class="pick-main">
+        <div class="pick-title">${w.title}</div>
+        <div class="pick-sub">${w.registrar === 'A' ? '自分(A)' : '相手(B)'} · ${w.status === 'done' ? '✅ 実行済み' : '⏳ 未実行'}</div>
+      </div>
+    </div>`).join('');
+
+  const clearBtn = currentCell
+    ? `<div class="f-card" style="margin-top:6px"><button class="pick-clear" onclick="clearCell()">🗑 このマスを空にする</button></div>`
+    : '';
+
+  document.getElementById('pickerList').innerHTML = `
+    <div class="f-card">${itemsHTML}</div>
+    ${clearBtn}
+    <div style="height:8px"></div>
+  `;
+  openM('pickerModal');
+}
+
+function pickWants(wantsId) {
+  const w = wantsItems.find(x => x.id === wantsId); if (!w) return;
+  const season = bingoData.seasons[seasonIdx];
+  season.cells[pickerCellIdx] = {
+    wantsId,
+    title:   w.title,
+    cleared: w.status === 'done',
+  };
+  persist();
+  closeM('pickerModal');
+  render();
+}
+
+function clearCell() {
+  bingoData.seasons[seasonIdx].cells[pickerCellIdx] = null;
+  persist();
+  closeM('pickerModal');
+  render();
+}
+
+/* ─── Cell Detail ─── */
+function showCellDetail(cell, idx) {
+  const w = wantsItems.find(x => x.id === cell.wantsId);
+  document.getElementById('cellViewBody').innerHTML = `
+    <div style="padding:4px 16px 12px;font-size:18px;font-weight:700;color:var(--text)">${cell.title}</div>
+    <div class="det-row"><span class="det-k">状態</span>    <span class="det-v">${cell.cleared ? '✅ クリア済み' : '⏳ 未クリア'}</span></div>
+    <div class="det-row"><span class="det-k">マス番号</span><span class="det-v">${idx + 1} / 25</span></div>
+    ${w ? `
+    <div class="det-row"><span class="det-k">登録者</span>  <span class="det-v">${w.registrar === 'A' ? '自分(A)' : '相手(B)'}</span></div>
+    ${w.doneDate ? `<div class="det-row"><span class="det-k">実行日</span><span class="det-v">${fmtDate(w.doneDate)}</span></div>` : ''}
+    ${w.period   ? `<div class="det-row"><span class="det-k">期間</span>  <span class="det-v">${w.period}</span></div>` : ''}
+    ${w.memo     ? `<div class="det-row"><span class="det-k">メモ</span>  <span class="det-v">${w.memo}</span></div>` : ''}
+    ` : ''}
+  `;
+  openM('cellViewModal');
+}
+
+/* ═══════════════════════════════════════════
+   REWARD
+═══════════════════════════════════════════ */
+function openRewardModal() {
+  document.getElementById('rewardInput').value = reward;
+  openM('rewardModal');
+}
+function saveReward() {
+  reward = document.getElementById('rewardInput').value.trim() || '報酬未設定';
+  localStorage.setItem(REWARD_STORE, reward);
+  closeM('rewardModal');
+  render();
+}
+
+/* ═══════════════════════════════════════════
+   MODAL HELPERS
+═══════════════════════════════════════════ */
+function openM(id)  { document.getElementById(id).classList.add('open'); }
+function closeM(id) { document.getElementById(id).classList.remove('open'); }
+function bgClose(e, id) { if (e.target === document.getElementById(id)) closeM(id); }
+
+/* ═══════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════ */
+function fmtDate(s) {
+  if (!s) return '—';
+  const d = new Date(s); if (isNaN(d)) return s;
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())}`;
+}
+
+function goBack() {
+  alert('やりたいことリストは 02_wants.html を開いてください');
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+ensureSeasons();
+seasonIdx = currentSeasonIdx();
+render();
+</script>
+</body>
+</html>

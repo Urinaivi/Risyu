@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<title>スタンプカード</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f2f2f7;
+  --card:#fff;
+  --text:#1c1c1e;
+  --sub:#6b7280;
+  --muted:#aeaeb2;
+  --border:rgba(0,0,0,0.07);
+  --accent:#7c7aff;
+  --green:#34c759;
+  --red:#ff3b30;
+  --orange:#ff9500;
+  --pink:#ff2d55;
+  --r:14px;
+  --nav:62px;
+}
+html,body{
+  height:100%;background:#c9c9ce;
+  display:flex;justify-content:center;align-items:center;
+  font-family:'Noto Sans JP',sans-serif;-webkit-font-smoothing:antialiased;
+}
+.phone{
+  width:390px;height:844px;background:var(--bg);border-radius:48px;overflow:hidden;
+  position:relative;display:flex;flex-direction:column;
+  box-shadow:0 40px 80px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.09);
+}
+
+/* ─── Header ─── */
+.hdr{
+  padding:52px 20px 10px;background:var(--bg);flex-shrink:0;
+  display:flex;align-items:flex-end;justify-content:space-between;
+}
+.hdr-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.3px}
+.hdr-acts{display:flex;gap:6px}
+.hdr-btn{
+  width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;
+  background:none;display:flex;align-items:center;justify-content:center;
+  font-size:19px;color:var(--sub);transition:background .15s;
+}
+.hdr-btn:active{background:var(--border)}
+
+/* ─── Scroll ─── */
+.scroll{flex:1;overflow-y:auto;padding:12px 14px 20px;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ─── Card Nav ─── */
+.card-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;
+}
+.nav-arrow{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--card);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;color:var(--sub);
+  box-shadow:0 1px 6px rgba(0,0,0,.08);
+  transition:background .15s,transform .1s;
+}
+.nav-arrow:active{transform:scale(.88)}
+.nav-arrow:disabled{opacity:.3;cursor:default}
+.card-nav-label{font-size:14px;font-weight:600;color:var(--sub)}
+
+/* ─── Stamp Card Body ─── */
+.stamp-card{
+  background:var(--card);border-radius:20px;
+  padding:18px;margin-bottom:12px;
+  box-shadow:0 2px 14px rgba(0,0,0,.07);
+}
+.stamp-card.completed{
+  background:linear-gradient(135deg,#fff0f5,#fff);
+  border:1.5px solid #ffc0cb;
+}
+.sc-header{text-align:center;margin-bottom:14px}
+.sc-title{font-size:17px;font-weight:700;color:var(--text)}
+.sc-period{font-size:12px;color:var(--sub);margin-top:3px}
+.sc-progress{
+  display:flex;align-items:center;gap:8px;margin-top:8px;
+}
+.progress-bar{
+  flex:1;height:6px;background:#e5e5ea;border-radius:3px;overflow:hidden;
+}
+.progress-fill{
+  height:100%;border-radius:3px;
+  background:linear-gradient(90deg,var(--accent),var(--pink));
+  transition:width .4s ease;
+}
+.progress-text{font-size:12px;font-weight:700;color:var(--sub);flex-shrink:0}
+
+/* ─── Stamp Grid ─── */
+.stamp-grid{
+  display:grid;grid-template-columns:repeat(6,1fr);
+  gap:5px;
+}
+.stamp-cell{
+  aspect-ratio:1;border-radius:8px;background:#f0f0f5;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;cursor:pointer;
+  transition:all .15s;position:relative;
+  -webkit-tap-highlight-color:transparent;
+}
+.stamp-cell:active{transform:scale(.88)}
+.stamp-cell.stamped{background:#fff0f5}
+.stamp-cell.stamped::after{content:'💕';font-size:18px}
+.stamp-cell.empty::after{content:''}
+/* 完了カードはスタンプ絵柄変更 */
+.stamp-card.completed .stamp-cell.stamped::after{content:'✨'}
+
+/* ─── 完了バナー ─── */
+.complete-banner{
+  background:linear-gradient(135deg,var(--pink),var(--accent));
+  border-radius:12px;padding:14px;margin-top:12px;
+  text-align:center;color:#fff;
+}
+.complete-banner-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.complete-banner-sub{font-size:12px;opacity:.88}
+
+/* ─── Goal Section ─── */
+.goal-card{
+  background:var(--card);border-radius:var(--r);
+  padding:14px 16px;margin-bottom:10px;
+}
+.goal-label{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.05em;margin-bottom:6px}
+.goal-text{font-size:15px;color:var(--text);line-height:1.6}
+.goal-edit-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.goal-input{
+  flex:1;border:.5px solid var(--border);border-radius:8px;
+  padding:8px 12px;font-size:14px;
+  font-family:'Noto Sans JP',sans-serif;color:var(--text);
+  background:var(--bg);outline:none;
+  transition:border-color .15s;
+}
+.goal-input:focus{border-color:var(--accent)}
+.goal-save-btn{
+  padding:8px 14px;background:var(--accent);color:#fff;
+  border:none;border-radius:8px;font-size:13px;font-weight:600;
+  font-family:'Noto Sans JP',sans-serif;cursor:pointer;flex-shrink:0;
+  transition:opacity .15s;
+}
+.goal-save-btn:active{opacity:.8}
+
+/* ─── Reward Section ─── */
+.reward-card{
+  background:var(--card);border-radius:var(--r);
+  padding:14px 16px;margin-bottom:12px;
+}
+.reward-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;
+}
+.reward-label{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.05em}
+.reward-edit-btn{
+  font-size:12px;color:var(--accent);background:none;
+  border:none;cursor:pointer;font-weight:600;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.reward-text{font-size:15px;color:var(--text);line-height:1.6}
+
+/* ─── Today Status ─── */
+.today-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;
+  margin-bottom:10px;
+}
+.today-badge.ok  {background:#e3f9eb;color:var(--green)}
+.today-badge.wait{background:#fff3e0;color:var(--orange)}
+.today-badge.done{background:#f0f0f5;color:var(--sub)}
+
+/* ─── FAB ─── */
+.fab{
+  position:absolute;bottom:calc(var(--nav)+18px);right:18px;
+  width:54px;height:54px;border-radius:50%;
+  background:var(--pink);color:#fff;border:none;cursor:pointer;
+  font-size:26px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 18px rgba(255,45,85,.45);
+  transition:transform .15s,box-shadow .15s;z-index:20;
+}
+.fab:active{transform:scale(.91);box-shadow:0 2px 8px rgba(255,45,85,.3)}
+.fab:disabled{background:#d1d1d6;box-shadow:0 4px 12px rgba(0,0,0,.12);cursor:default}
+
+/* ─── Bottom Nav ─── */
+.nav{
+  height:var(--nav);background:rgba(250,250,250,.96);
+  border-top:.5px solid var(--border);display:flex;
+  align-items:center;flex-shrink:0;backdrop-filter:blur(20px);z-index:30;
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;cursor:pointer;padding:6px 0;
+  border:none;background:none;-webkit-tap-highlight-color:transparent;transition:transform .1s;
+}
+.nav-item:active{transform:scale(.88)}
+.nav-icon{font-size:22px;line-height:1}
+.nav-lbl{font-size:10px;font-weight:500;color:var(--muted)}
+.nav-item.active .nav-lbl{color:var(--accent);font-weight:700}
+
+/* ─── Overlay / Sheet ─── */
+.overlay{
+  position:absolute;inset:0;background:rgba(0,0,0,.42);
+  z-index:100;display:flex;align-items:flex-end;
+  opacity:0;pointer-events:none;transition:opacity .22s;
+}
+.overlay.open{opacity:1;pointer-events:all}
+.sheet{
+  width:100%;background:var(--bg);border-radius:24px 24px 0 0;
+  transform:translateY(100%);max-height:88%;overflow-y:auto;
+  transition:transform .3s cubic-bezier(.32,.72,0,1);
+}
+.overlay.open .sheet{transform:translateY(0)}
+.sh-handle{width:36px;height:4px;background:#c7c7cc;border-radius:2px;margin:12px auto 0}
+.sh-hdr{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 10px}
+.sh-title{font-size:17px;font-weight:700;color:var(--text)}
+.x-btn{
+  width:28px;height:28px;border-radius:50%;background:#e4e4e9;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--sub);
+}
+
+/* ─── Form ─── */
+.f-card{background:var(--card);border-radius:var(--r);margin:0 14px 10px;overflow:hidden}
+.f-row{display:flex;align-items:flex-start;padding:13px 16px;border-bottom:.5px solid var(--border);gap:10px}
+.f-row:last-child{border-bottom:none}
+.f-lbl{font-size:15px;color:var(--text);min-width:80px;flex-shrink:0;padding-top:2px}
+.f-inp{
+  flex:1;border:none;outline:none;font-size:15px;resize:none;
+  font-family:'Noto Sans JP',sans-serif;color:var(--text);
+  background:transparent;text-align:left;line-height:1.6;
+}
+.f-inp::placeholder{color:#c7c7cc}
+.ok-btn{
+  display:block;width:calc(100% - 28px);margin:2px 14px 22px;
+  padding:15px;background:var(--pink);color:#fff;
+  border:none;border-radius:var(--r);font-size:16px;font-weight:700;
+  font-family:'Noto Sans JP',sans-serif;cursor:pointer;letter-spacing:.04em;
+  transition:opacity .15s,transform .12s;
+}
+.ok-btn:active{opacity:.82;transform:scale(.98)}
+
+/* ─── Stamp Detail Sheet ─── */
+.det-row{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:12px 16px;border-bottom:.5px solid var(--border);font-size:14px;gap:12px;
+}
+.det-row:last-child{border-bottom:none}
+.det-k{color:var(--sub);flex-shrink:0}
+.det-v{color:var(--text);font-weight:500;text-align:right}
+
+/* ─── Animations ─── */
+@keyframes stampPop{
+  0%  {transform:scale(1)}
+  40% {transform:scale(1.35)}
+  70% {transform:scale(.9)}
+  100%{transform:scale(1)}
+}
+.stamp-pop{animation:stampPop .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .2s ease}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-title">スタンプカード</div>
+    <div class="hdr-acts">
+      <button class="hdr-btn" id="newCardBtn" onclick="openNewCardModal()" title="新しいカードを手動作成">＋</button>
+    </div>
+  </div>
+
+  <!-- Scroll -->
+  <div class="scroll" id="scroll"></div>
+
+  <!-- FAB: スタンプを押す -->
+  <button class="fab" id="stampFab" onclick="pressStamp()" title="今日のスタンプを押す">🔖</button>
+
+  <!-- Bottom Nav -->
+  <nav class="nav">
+    <button class="nav-item" onclick="alert('ホームは別途作成予定')">
+      <span class="nav-icon">🏠</span><span class="nav-lbl">ホーム</span>
+    </button>
+    <button class="nav-item" onclick="alert('支払い管理は01_payment.htmlを参照')">
+      <span class="nav-icon">💰</span><span class="nav-lbl">支払い</span>
+    </button>
+    <button class="nav-item" onclick="alert('やりたいことリストは02_wants.htmlを参照')">
+      <span class="nav-icon">📋</span><span class="nav-lbl">やりたい</span>
+    </button>
+    <button class="nav-item active">
+      <span class="nav-icon">🔖</span><span class="nav-lbl">スタンプ</span>
+    </button>
+  </nav>
+
+  <!-- ── 報酬編集モーダル ── -->
+  <div class="overlay" id="rewardModal" onclick="bgClose(event,'rewardModal')">
+    <div class="sheet">
+      <div class="sh-handle"></div>
+      <div class="sh-hdr">
+        <span class="sh-title">コンプリート報酬を編集</span>
+        <button class="x-btn" onclick="close('rewardModal')">✕</button>
+      </div>
+      <div class="f-card">
+        <div class="f-row">
+          <span class="f-lbl">報酬内容</span>
+          <textarea class="f-inp" id="rewardInput" rows="3" placeholder="例：好きなレストランへのディナー 🍽️"></textarea>
+        </div>
+      </div>
+      <button class="ok-btn" onclick="saveReward()">保存する</button>
+    </div>
+  </div>
+
+  <!-- ── スタンプ詳細モーダル ── -->
+  <div class="overlay" id="stampDetModal" onclick="bgClose(event,'stampDetModal')">
+    <div class="sheet">
+      <div class="sh-handle"></div>
+      <div class="sh-hdr">
+        <span class="sh-title">スタンプ詳細</span>
+        <button class="x-btn" onclick="close('stampDetModal')">✕</button>
+      </div>
+      <div id="stampDetBody"></div>
+    </div>
+  </div>
+
+  <!-- ── 新しいカード作成モーダル ── -->
+  <div class="overlay" id="newCardModal" onclick="bgClose(event,'newCardModal')">
+    <div class="sheet">
+      <div class="sh-handle"></div>
+      <div class="sh-hdr">
+        <span class="sh-title">新しいスタンプカード</span>
+        <button class="x-btn" onclick="close('newCardModal')">✕</button>
+      </div>
+      <div class="f-card">
+        <div class="f-row">
+          <span class="f-lbl">カード名</span>
+          <textarea class="f-inp" id="newCardTitle" rows="1" placeholder="例：2026年 夏のスタンプカード"></textarea>
+        </div>
+        <div class="f-row">
+          <span class="f-lbl">目標</span>
+          <textarea class="f-inp" id="newCardGoal" rows="2" placeholder="例：12:00までにお風呂に入る"></textarea>
+        </div>
+      </div>
+      <button class="ok-btn" onclick="createNewCard()">作成する</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ─── STATE ─── */
+const STORE        = 'stamp_v1';
+const REWARD_STORE = 'stamp_reward_v1';
+
+// カード構造: { id, title, goal, startDate, cells:[30 bools], stampDates:[30 ISO|null], completed, completedDate }
+let data   = loadData();
+let reward = localStorage.getItem(REWARD_STORE) || '互いに好きな報酬を決める 🎁';
+let cardIdx = data.cards.length - 1; // 最新カードを表示
+
+function loadData() {
+  try {
+    const d = JSON.parse(localStorage.getItem(STORE));
+    if (d && Array.isArray(d.cards) && d.cards.length) return d;
+  } catch {}
+  return { cards: [createCard('最初のスタンプカード', '毎日の目標をここに入力')] };
+}
+
+/* ─── UTILS ─── */
+function uid()      { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function fmtDateTime(s) {
+  if (!s) return '—';
+  const d = new Date(s); if (isNaN(d)) return s;
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function fmtDay(s) {
+  if (!s) return '—';
+  const d = new Date(s); if (isNaN(d)) return s;
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())}`;
+}
+function persist() { localStorage.setItem(STORE, JSON.stringify(data)); }
+
+function createCard(title, goal) {
+  return {
+    id: uid(), title, goal,
+    startDate: new Date().toISOString(),
+    cells: Array(30).fill(false),
+    stampDates: Array(30).fill(null),
+    completed: false,
+    completedDate: null,
+  };
+}
+
+/* 今日すでにスタンプ済みか（00:01〜24:00） */
+function stampedToday(card) {
+  return card.stampDates.some(d => d && d.startsWith(todayStr()));
+}
+
+/* ─── RENDER ─── */
+function render() {
+  const el = document.getElementById('scroll');
+  const cards = data.cards;
+  if (!cards.length) { el.innerHTML = '<div style="text-align:center;padding:48px 24px;color:var(--muted)">カードがありません</div>'; return; }
+
+  // 表示カードを最新に補正
+  if (cardIdx >= cards.length) cardIdx = cards.length - 1;
+  if (cardIdx < 0) cardIdx = 0;
+
+  const card     = cards[cardIdx];
+  const stamped  = card.cells.filter(Boolean).length;
+  const pct      = Math.round(stamped / 30 * 100);
+  const todayOk  = stampedToday(card);
+  const isLatest = cardIdx === cards.length - 1;
+
+  // FAB制御: 最新かつ未完了かつ今日未スタンプのときのみ有効
+  const fab = document.getElementById('stampFab');
+  if (!isLatest || card.completed || todayOk) {
+    fab.disabled = true;
+    fab.style.background = '#d1d1d6';
+    fab.style.boxShadow  = '0 4px 12px rgba(0,0,0,.12)';
+  } else {
+    fab.disabled = false;
+    fab.style.background = 'var(--pink)';
+    fab.style.boxShadow  = '0 4px 18px rgba(255,45,85,.45)';
+  }
+
+  // ステータスバッジ
+  let badgeHTML = '';
+  if (card.completed) {
+    badgeHTML = `<div class="today-badge done">✨ コンプリート済み</div>`;
+  } else if (todayOk) {
+    badgeHTML = `<div class="today-badge ok">✅ 今日のスタンプ完了</div>`;
+  } else if (isLatest) {
+    badgeHTML = `<div class="today-badge wait">⏳ 今日のスタンプがまだです</div>`;
+  }
+
+  // スタンプグリッド
+  const gridCells = card.cells.map((s, i) => {
+    const cls = s ? 'stamp-cell stamped' : 'stamp-cell empty';
+    return `<div class="${cls}" id="cell-${i}" onclick="cellTap(${i})"></div>`;
+  }).join('');
+
+  // 完了バナー
+  const completeBanner = card.completed ? `
+    <div class="complete-banner">
+      <div class="complete-banner-title">🎉 コンプリート！</div>
+      <div class="complete-banner-sub">${fmtDay(card.completedDate)} 達成</div>
+    </div>` : '';
+
+  el.innerHTML = `
+    ${badgeHTML}
+
+    <div class="card-nav">
+      <button class="nav-arrow" id="prevBtn" onclick="moveCard(-1)" ${cardIdx===0?'disabled':''}>‹</button>
+      <span class="card-nav-label">${cardIdx+1} / ${cards.length}</span>
+      <button class="nav-arrow" id="nextBtn" onclick="moveCard(1)" ${cardIdx===cards.length-1?'disabled':''}>›</button>
+    </div>
+
+    <div class="stamp-card ${card.completed?'completed':''} fade-in">
+      <div class="sc-header">
+        <div class="sc-title">${card.title}</div>
+        <div class="sc-period">開始: ${fmtDay(card.startDate)}</div>
+        <div class="sc-progress">
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <span class="progress-text">${stamped}/30</span>
+        </div>
+      </div>
+      <div class="stamp-grid">${gridCells}</div>
+      ${completeBanner}
+    </div>
+
+    <div class="goal-card">
+      <div class="goal-label">スタンプ目標</div>
+      <div class="goal-text" id="goalText">${card.goal || '目標を設定しましょう'}</div>
+      ${isLatest && !card.completed ? `
+        <div class="goal-edit-row">
+          <input class="goal-input" id="goalInput" value="${card.goal||''}" placeholder="目標を入力..."/>
+          <button class="goal-save-btn" onclick="saveGoal()">保存</button>
+        </div>` : ''}
+    </div>
+
+    <div class="reward-card">
+      <div class="reward-header">
+        <span class="reward-label">コンプリート報酬について</span>
+        <button class="reward-edit-btn" onclick="openRewardModal()">✏️ 編集</button>
+      </div>
+      <div class="reward-text">${reward}</div>
+    </div>
+
+    <div style="height:6px"></div>
+  `;
+}
+
+/* ─── CARD NAV ─── */
+function moveCard(dir) {
+  cardIdx = Math.max(0, Math.min(data.cards.length - 1, cardIdx + dir));
+  render();
+}
+
+/* ─── STAMP ─── */
+function pressStamp() {
+  const card = data.cards[cardIdx];
+  if (!card || card.completed) return;
+  if (stampedToday(card)) { alert('今日はすでにスタンプ済みです (00:01〜24:00)'); return; }
+
+  const nextIdx = card.cells.findIndex(c => !c);
+  if (nextIdx === -1) return;
+
+  card.cells[nextIdx]      = true;
+  card.stampDates[nextIdx] = new Date().toISOString();
+
+  // アニメーション
+  setTimeout(() => {
+    const cell = document.getElementById(`cell-${nextIdx}`);
+    if (cell) { cell.classList.add('stamped'); cell.classList.remove('empty'); cell.classList.add('stamp-pop'); }
+  }, 10);
+
+  const stamped = card.cells.filter(Boolean).length;
+
+  if (stamped === 30) {
+    card.completed     = true;
+    card.completedDate = new Date().toISOString();
+    persist();
+    setTimeout(() => {
+      alert('🎉 おめでとう！スタンプカードをコンプリートしました！\n報酬をゲット！');
+      autoCreateNextCard();
+      cardIdx = data.cards.length - 1;
+      render();
+    }, 400);
+    return;
+  }
+
+  persist();
+  render();
+}
+
+/* コンプリート後、次のカードを自動生成 */
+function autoCreateNextCard() {
+  const newCard = createCard(
+    `スタンプカード ${data.cards.length + 1}`,
+    data.cards[data.cards.length - 1].goal || '毎日の目標'
+  );
+  data.cards.push(newCard);
+  persist();
+}
+
+/* ─── CELL TAP (詳細) ─── */
+function cellTap(idx) {
+  const card = data.cards[cardIdx];
+  if (!card.cells[idx]) return; // 空マスは何もしない
+  const d = card.stampDates[idx];
+  document.getElementById('stampDetBody').innerHTML = `
+    <div class="det-row"><span class="det-k">スタンプ番号</span><span class="det-v">${idx + 1}番目</span></div>
+    <div class="det-row"><span class="det-k">押した日時</span><span class="det-v">${fmtDateTime(d)}</span></div>
+  `;
+  open('stampDetModal');
+}
+
+/* ─── GOAL ─── */
+function saveGoal() {
+  const val = (document.getElementById('goalInput')?.value || '').trim();
+  if (!val) { alert('目標を入力してください'); return; }
+  data.cards[cardIdx].goal = val;
+  persist();
+  render();
+}
+
+/* ─── REWARD ─── */
+function openRewardModal() {
+  document.getElementById('rewardInput').value = reward;
+  open('rewardModal');
+}
+function saveReward() {
+  reward = document.getElementById('rewardInput').value.trim() || '報酬未設定';
+  localStorage.setItem(REWARD_STORE, reward);
+  close('rewardModal');
+  render();
+}
+
+/* ─── NEW CARD ─── */
+function openNewCardModal() {
+  document.getElementById('newCardTitle').value = `スタンプカード ${data.cards.length + 1}`;
+  document.getElementById('newCardGoal').value  = data.cards[data.cards.length-1]?.goal || '';
+  open('newCardModal');
+}
+function createNewCard() {
+  const title = document.getElementById('newCardTitle').value.trim();
+  const goal  = document.getElementById('newCardGoal').value.trim();
+  if (!title) { alert('カード名を入力してください'); return; }
+  data.cards.push(createCard(title, goal));
+  persist();
+  cardIdx = data.cards.length - 1;
+  close('newCardModal');
+  render();
+}
+
+/* ─── MODAL HELPERS ─── */
+function open(id)  { document.getElementById(id).classList.add('open'); }
+function close(id) { document.getElementById(id).classList.remove('open'); }
+function bgClose(e, id) { if (e.target === document.getElementById(id)) close(id); }
+
+/* ─── INIT ─── */
+render();
+</script>
+</body>
+</html>

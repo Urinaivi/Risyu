@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<title>やりたいことリスト</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f2f2f7;
+  --card:#fff;
+  --text:#1c1c1e;
+  --sub:#6b7280;
+  --muted:#aeaeb2;
+  --border:rgba(0,0,0,0.07);
+  --accent:#7c7aff;
+  --green:#34c759;
+  --red:#ff3b30;
+  --orange:#ff9500;
+  --r:14px;
+  --nav:62px;
+}
+html,body{
+  height:100%;background:#c9c9ce;
+  display:flex;justify-content:center;align-items:center;
+  font-family:'Noto Sans JP',sans-serif;-webkit-font-smoothing:antialiased;
+}
+
+/* ─── Phone ─── */
+.phone{
+  width:390px;height:844px;background:var(--bg);border-radius:48px;overflow:hidden;
+  position:relative;display:flex;flex-direction:column;
+  box-shadow:0 40px 80px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.09);
+}
+
+/* ─── Header ─── */
+.hdr{
+  padding:52px 20px 10px;background:var(--bg);
+  flex-shrink:0;display:flex;align-items:flex-end;justify-content:space-between;
+}
+.hdr-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.3px}
+.hdr-acts{display:flex;gap:6px}
+.hdr-btn{
+  width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;
+  background:none;display:flex;align-items:center;justify-content:center;
+  font-size:19px;color:var(--sub);transition:background .15s;
+}
+.hdr-btn:active{background:var(--border)}
+
+/* ─── Search ─── */
+.search-wrap{padding:4px 14px 10px;flex-shrink:0}
+.search-box{
+  background:var(--card);border-radius:12px;
+  display:flex;align-items:center;gap:8px;padding:10px 14px;
+}
+.search-box input{
+  flex:1;border:none;outline:none;font-size:14px;
+  font-family:'Noto Sans JP',sans-serif;color:var(--text);background:transparent;
+}
+.search-box input::placeholder{color:var(--muted)}
+
+/* ─── Scroll ─── */
+.scroll{flex:1;overflow-y:auto;padding:0 14px 20px;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ─── Charts ─── */
+.chart-row{display:flex;gap:8px;margin-bottom:8px}
+.chart-box{
+  flex:1;background:var(--card);border-radius:var(--r);
+  padding:14px 10px;display:flex;flex-direction:column;align-items:center;
+}
+.chart-lbl{font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.04em;margin-bottom:8px;text-align:center}
+.chart-sub{font-size:11px;color:var(--muted);margin-top:6px;text-align:center}
+.pie-wrap{position:relative;width:76px;height:76px}
+.pie-wrap canvas{width:76px!important;height:76px!important}
+.pie-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;pointer-events:none;
+}
+.pie-num{font-size:16px;font-weight:700;color:var(--text)}
+.pie-unit{font-size:10px;color:var(--sub)}
+
+/* ─── Section Label ─── */
+.sec-lbl{
+  font-size:12px;font-weight:700;color:var(--sub);
+  letter-spacing:.07em;text-transform:uppercase;padding:14px 2px 6px;
+}
+
+/* ─── List ─── */
+.c-list{background:var(--card);border-radius:var(--r);overflow:hidden;margin-bottom:6px}
+.c-row{
+  display:flex;align-items:center;padding:14px 16px;
+  border-bottom:.5px solid var(--border);gap:10px;
+  cursor:pointer;transition:background .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.c-row:last-child{border-bottom:none}
+.c-row:active{background:#f5f5fa}
+.c-main{flex:1;min-width:0}
+.c-title{font-size:15px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-sub{font-size:12px;color:var(--sub);margin-top:2px}
+.c-right{text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;display:inline-block}
+.b-orange{background:#fff3e0;color:var(--orange)}
+.b-green {background:#e3f9eb;color:var(--green)}
+.empty-row{padding:24px;text-align:center;font-size:14px;color:var(--muted)}
+
+/* ─── FAB ─── */
+.fab{
+  position:absolute;bottom:calc(var(--nav)+18px);right:18px;
+  width:54px;height:54px;border-radius:50%;
+  background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:26px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 18px rgba(124,122,255,.5);
+  transition:transform .15s;z-index:20;
+}
+.fab:active{transform:scale(.91)}
+
+/* ─── Bottom Nav ─── */
+.nav{
+  height:var(--nav);background:rgba(250,250,250,.96);
+  border-top:.5px solid var(--border);
+  display:flex;align-items:center;flex-shrink:0;
+  backdrop-filter:blur(20px);z-index:30;
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;cursor:pointer;padding:6px 0;border:none;background:none;
+  -webkit-tap-highlight-color:transparent;transition:transform .1s;
+}
+.nav-item:active{transform:scale(.88)}
+.nav-icon{font-size:22px;line-height:1}
+.nav-lbl{font-size:10px;font-weight:500;color:var(--muted)}
+.nav-item.active .nav-lbl{color:var(--accent);font-weight:700}
+
+/* ─── Overlay / Sheet ─── */
+.overlay{
+  position:absolute;inset:0;background:rgba(0,0,0,.42);
+  z-index:100;display:flex;align-items:flex-end;
+  opacity:0;pointer-events:none;transition:opacity .22s;
+}
+.overlay.open{opacity:1;pointer-events:all}
+.sheet{
+  width:100%;background:var(--bg);border-radius:24px 24px 0 0;
+  transform:translateY(100%);max-height:92%;overflow-y:auto;
+  transition:transform .3s cubic-bezier(.32,.72,0,1);
+}
+.overlay.open .sheet{transform:translateY(0)}
+.sh-handle{width:36px;height:4px;background:#c7c7cc;border-radius:2px;margin:12px auto 0}
+.sh-hdr{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 10px}
+.sh-title{font-size:17px;font-weight:700;color:var(--text)}
+.x-btn{
+  width:28px;height:28px;border-radius:50%;background:#e4e4e9;
+  border:none;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;font-size:14px;color:var(--sub);
+}
+
+/* ─── Form ─── */
+.f-card{background:var(--card);border-radius:var(--r);margin:0 14px 10px;overflow:hidden}
+.f-row{
+  display:flex;align-items:center;padding:13px 16px;
+  border-bottom:.5px solid var(--border);gap:10px;
+}
+.f-row:last-child{border-bottom:none}
+.f-lbl{font-size:15px;color:var(--text);min-width:86px;flex-shrink:0}
+.f-inp{
+  flex:1;border:none;outline:none;font-size:15px;
+  font-family:'Noto Sans JP',sans-serif;color:var(--text);
+  background:transparent;text-align:right;
+}
+.f-inp::placeholder{color:#c7c7cc}
+.f-inp.left{text-align:left}
+input[type=date]{color-scheme:light}
+textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
+.tgl-g{display:flex;gap:6px;margin-left:auto}
+.tgl{
+  padding:7px 12px;border-radius:11px;font-size:12px;font-weight:700;
+  font-family:'Noto Sans JP',sans-serif;border:none;cursor:pointer;
+  transition:background .16s,color .16s,transform .1s;
+}
+.tgl:active{transform:scale(.93)}
+.tgl-off    {background:#e4e4e9;color:var(--sub)}
+.tgl-accent {background:var(--accent);color:#fff}
+.tgl-green  {background:var(--green);color:#fff}
+.tgl-orange {background:var(--orange);color:#fff}
+.ok-btn{
+  display:block;width:calc(100% - 28px);margin:2px 14px 22px;
+  padding:15px;background:var(--accent);color:#fff;
+  border:none;border-radius:var(--r);font-size:16px;font-weight:700;
+  font-family:'Noto Sans JP',sans-serif;cursor:pointer;letter-spacing:.04em;
+  transition:opacity .15s,transform .12s;
+}
+.ok-btn:active{opacity:.82;transform:scale(.98)}
+.ok-btn.green{background:var(--green)}
+.ok-btn.orange{background:var(--orange)}
+.del-btn{
+  display:block;width:calc(100% - 28px);margin:4px 14px 22px;
+  padding:13px;background:#ffe5e4;color:var(--red);
+  border:none;border-radius:var(--r);
+  font-size:15px;font-weight:600;
+  font-family:'Noto Sans JP',sans-serif;cursor:pointer;
+}
+
+/* ─── Detail ─── */
+.det-title{font-size:20px;font-weight:700;color:var(--text);padding:4px 16px 12px;line-height:1.4}
+.det-row{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:11px 16px;border-bottom:.5px solid var(--border);
+  font-size:14px;gap:12px;
+}
+.det-row:last-child{border-bottom:none}
+.det-k{color:var(--sub);flex-shrink:0}
+.det-v{color:var(--text);font-weight:500;text-align:right;word-break:break-all;max-width:230px}
+.det-v a{color:var(--accent);text-decoration:none}
+
+/* ─── Filter Sheet ─── */
+.filter-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;border-bottom:.5px solid var(--border);
+}
+.filter-lbl{font-size:15px;color:var(--text)}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-title">やりたいことリスト</div>
+    <div class="hdr-acts">
+      <button class="hdr-btn" onclick="openFilter()" title="フィルター">⚙️</button>
+      <button class="hdr-btn" onclick="goToBingo()" title="ビンゴ">⬛</button>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <div class="search-box">
+      <span style="font-size:16px;color:var(--muted)">🔍</span>
+      <input id="searchInput" placeholder="検索..." oninput="render()"/>
+    </div>
+  </div>
+
+  <!-- Scroll -->
+  <div class="scroll" id="scroll"></div>
+
+  <!-- FAB -->
+  <button class="fab" onclick="openAdd()">＋</button>
+
+  <!-- Bottom Nav -->
+  <nav class="nav">
+    <button class="nav-item" onclick="alert('ホームは別途作成予定')">
+      <span class="nav-icon">🏠</span><span class="nav-lbl">ホーム</span>
+    </button>
+    <button class="nav-item" onclick="alert('支払い管理は01_payment.htmlを参照')">
+      <span class="nav-icon">💰</span><span class="nav-lbl">支払い</span>
+    </button>
+    <button class="nav-item active">
+      <span class="nav-icon">📋</span><span class="nav-lbl">やりたい</span>
+    </button>
+    <button class="nav-item" onclick="alert('スタンプカードは別途作成予定')">
+      <span class="nav-icon">🔖</span><span class="nav-lbl">スタンプ</span>
+    </button>
+  </nav>
+
+  <!-- ── 追加モーダル ── -->
+  <div class="overlay" id="addModal" onclick="bgClose(event,'addModal')">
+    <div class="sheet">
+      <div class="sh-handle"></div>
+      <div class="sh-hdr">
+        <span class="sh-title">やりたいことを追加</span>
+        <button class="x-btn" onclick="close('addModal')">✕</button>
+      </div>
+      <div class="f-card">
+        <div class="f-row">
+          <span class="f-lbl">タイトル</span>
+          <input class="f-inp" type="text" id="f-title" placeholder="例：花畑へ行く"/>
+        </div>
+        <div class="f-row">
+          <span class="f-lbl">イベント期間</span>
+          <input class="f-inp" type="text" id="f-period" placeholder="例：2026/4/1〜4/30"/>
+        </div>
+        <div class="f-row">
+          <span class="f-lbl">URL</span>
+          <input class="f-inp" type="url" id="f-url" placeholder="https://..."/>
+        </div>
+        <div class="f-row" style="align-items:flex-start;padding-top:14px">
+          <span class="f-lbl" style="padding-top:2px">メモ</span>
+          <textarea class="f-inp left" id="f-memo" rows="2" placeholder="任意"></textarea>
+        </div>
+      </div>
+      <div class="f-card">
+        <div class="f-row">
+          <span class="f-lbl">登録者</span>
+          <div class="tgl-g">
+            <button class="tgl tgl-accent" id="t-regA" onclick="setReg('A')">自分 (A)</button>
+            <button class="tgl tgl-off"    id="t-regB" onclick="setReg('B')">相手 (B)</button>
+          </div>
+        </div>
+        <div class="f-row">
+          <span class="f-lbl">ステータス</span>
+          <div class="tgl-g">
+            <button class="tgl tgl-orange" id="t-pending" onclick="setStatus('pending')">未実行</button>
+            <button class="tgl tgl-off"    id="t-done"    onclick="setStatus('done')">実行済み</button>
+          </div>
+        </div>
+        <div class="f-row" id="doneDateRow" style="display:none">
+          <span class="f-lbl">実行日</span>
+          <input class="f-inp" type="date" id="f-donedate"/>
+        </div>
+      </div>
+      <button class="ok-btn" onclick="submitAdd()">追加する</button>
+    </div>
+  </div>
+
+  <!-- ── 詳細モーダル ── -->
+  <div class="overlay" id="detModal" onclick="bgClose(event,'detModal')">
+    <div class="sheet">
+      <div class="sh-handle"></div>
+      <div class="sh-hdr">
+        <span class="sh-title">詳細</span>
+        <button class="x-btn" onclick="close('detModal')">✕</button>
+      </div>
+      <div id="detBody"></div>
+      <button class="ok-btn green" id="toggleBtn">✅ 実行済みにする</button>
+      <button class="del-btn" id="delBtn">🗑 削除する</button>
+    </div>
+  </div>
+
+  <!-- ── フィルターモーダル ── -->
+  <div class="overlay" id="filterModal" onclick="bgClose(event,'filterModal')">
+    <div class="sheet">
+      <div class="sh-handle"></div>
+      <div class="sh-hdr">
+        <span class="sh-title">フィルター / 並び替え</span>
+        <button class="x-btn" onclick="close('filterModal')">✕</button>
+      </div>
+      <div class="f-card" style="margin-bottom:10px">
+        <div class="filter-row">
+          <span class="filter-lbl">表示するステータス</span>
+          <div class="tgl-g">
+            <button class="tgl" id="fil-all"     onclick="setFilter('all')">全て</button>
+            <button class="tgl" id="fil-pending" onclick="setFilter('pending')">未実行</button>
+            <button class="tgl" id="fil-done"    onclick="setFilter('done')">実行済み</button>
+          </div>
+        </div>
+        <div class="filter-row">
+          <span class="filter-lbl">登録者</span>
+          <div class="tgl-g">
+            <button class="tgl" id="fil-regAll" onclick="setRegFilter('all')">全て</button>
+            <button class="tgl" id="fil-regA"   onclick="setRegFilter('A')">自分(A)</button>
+            <button class="tgl" id="fil-regB"   onclick="setRegFilter('B')">相手(B)</button>
+          </div>
+        </div>
+        <div class="filter-row">
+          <span class="filter-lbl">並び替え</span>
+          <div class="tgl-g">
+            <button class="tgl" id="sort-reg"  onclick="setSort('reg')">登録日</button>
+            <button class="tgl" id="sort-done" onclick="setSort('done')">実行日</button>
+          </div>
+        </div>
+      </div>
+      <button class="ok-btn" onclick="close('filterModal');render()">適用する</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ─── STATE ─── */
+const STORE = 'wants_v1';
+
+let items = (() => {
+  try { return JSON.parse(localStorage.getItem(STORE)) || null; } catch { return null; }
+})() || [
+  { id: uid(), title: '花畑へ行く',  regDate: '2026-03-02', period: '2026/4/1〜4/30',  url: '', memo: '春限定',  registrar: 'A', status: 'pending', doneDate: null,       createdAt: '2026-03-02T00:00' },
+  { id: uid(), title: '水族館デート', regDate: '2026-03-02', period: '',               url: '', memo: '',        registrar: 'B', status: 'pending', doneDate: null,       createdAt: '2026-03-02T00:00' },
+  { id: uid(), title: 'お化け屋敷',   regDate: '2026-03-02', period: '2026/4/20〜5/5', url: '', memo: '',        registrar: 'A', status: 'pending', doneDate: null,       createdAt: '2026-03-02T00:00' },
+  { id: uid(), title: '動物園',       regDate: '2026-03-02', period: '',               url: '', memo: '',        registrar: 'B', status: 'done',    doneDate: '2026-03-15', createdAt: '2026-03-02T00:00' },
+  { id: uid(), title: '映画鑑賞',     regDate: '2026-02-10', period: '',               url: '', memo: '',        registrar: 'A', status: 'done',    doneDate: '2026-02-20', createdAt: '2026-02-10T00:00' },
+];
+
+let fReg    = 'A';
+let fStatus = 'pending';
+let filterStatus = 'all';
+let filterReg    = 'all';
+let sortKey      = 'reg';
+
+/* ─── UTILS ─── */
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function fmtDay(s) {
+  if (!s) return '—';
+  const d = new Date(s); if (isNaN(d)) return s;
+  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+}
+function persist() { localStorage.setItem(STORE, JSON.stringify(items)); }
+
+// 実行日から3年超のデータを自動削除
+function autoDelete() {
+  const y3 = 3 * 365 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const before = items.length;
+  items = items.filter(w => {
+    if (w.status !== 'done' || !w.doneDate) return true;
+    return now - new Date(w.doneDate).getTime() < y3;
+  });
+  if (items.length !== before) persist();
+}
+
+/* ─── RENDER ─── */
+function render() {
+  const el  = document.getElementById('scroll');
+  const q   = (document.getElementById('searchInput')?.value || '').toLowerCase();
+
+  let list = items.filter(w => {
+    if (q && !w.title.toLowerCase().includes(q) && !w.memo.toLowerCase().includes(q)) return false;
+    if (filterStatus !== 'all' && w.status !== filterStatus) return false;
+    if (filterReg    !== 'all' && w.registrar !== filterReg) return false;
+    return true;
+  });
+
+  list.sort((a,b) => {
+    if (sortKey === 'done') return (b.doneDate||'').localeCompare(a.doneDate||'');
+    return (b.regDate||'').localeCompare(a.regDate||'');
+  });
+
+  const pending = list.filter(w => w.status === 'pending');
+  const done    = list.filter(w => w.status === 'done');
+  const total   = items.length;
+  const doneAll = items.filter(w => w.status === 'done').length;
+  const aCount  = items.filter(w => w.registrar === 'A').length;
+  const bCount  = items.filter(w => w.registrar === 'B').length;
+
+  const row = w => `
+    <div class="c-row" onclick="openDetail('${w.id}')">
+      <div class="c-main">
+        <div class="c-title">${w.title}</div>
+        <div class="c-sub">登録: ${fmtDay(w.regDate)} · ${w.registrar === 'A' ? '自分(A)' : '相手(B)'}${w.period ? ' · '+w.period : ''}</div>
+      </div>
+      <div class="c-right">
+        <span class="badge ${w.status === 'done' ? 'b-green' : 'b-orange'}">${w.status === 'done' ? '実行済み' : '未実行'}</span>
+      </div>
+    </div>`;
+
+  el.innerHTML = `
+    <div class="chart-row">
+      <div class="chart-box">
+        <div class="chart-lbl">実行率</div>
+        <div class="pie-wrap">
+          <canvas id="pie1"></canvas>
+          <div class="pie-center">
+            <div class="pie-num">${total ? Math.round(doneAll/total*100) : 0}</div>
+            <div class="pie-unit">%</div>
+          </div>
+        </div>
+        <div class="chart-sub">${doneAll} / ${total} 件</div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-lbl">登録数の割合</div>
+        <div class="pie-wrap">
+          <canvas id="pie2"></canvas>
+          <div class="pie-center">
+            <div class="pie-num" style="font-size:12px;color:var(--sub)">A:${aCount}<br>B:${bCount}</div>
+          </div>
+        </div>
+        <div class="chart-sub">全 ${total} 件</div>
+      </div>
+    </div>
+
+    <div class="sec-lbl">未実行 (${pending.length})</div>
+    <div class="c-list">${pending.length ? pending.map(row).join('') : '<div class="empty-row">データなし</div>'}</div>
+
+    <div class="sec-lbl">実行済み (${done.length})</div>
+    <div class="c-list">${done.length ? done.map(row).join('') : '<div class="empty-row">データなし</div>'}</div>
+    <div style="height:6px"></div>
+  `;
+
+  drawPie('pie1', [doneAll, total - doneAll], ['#34c759','#e5e5ea']);
+  drawPie('pie2', [aCount, bCount], ['#7c7aff','#ff9500']);
+}
+
+function drawPie(id, data, colors) {
+  const c = document.getElementById(id); if (!c) return;
+  c.width = 76; c.height = 76;
+  const ctx = c.getContext('2d');
+  const total = data.reduce((s,v) => s + v, 0) || 1;
+  let angle = -Math.PI / 2;
+  data.forEach((v, i) => {
+    const s = (v / total) * Math.PI * 2;
+    ctx.beginPath(); ctx.moveTo(38, 38);
+    ctx.arc(38, 38, 35, angle, angle + s);
+    ctx.closePath(); ctx.fillStyle = colors[i]; ctx.fill();
+    angle += s;
+  });
+  ctx.beginPath(); ctx.arc(38, 38, 20, 0, Math.PI * 2);
+  ctx.fillStyle = '#fff'; ctx.fill();
+}
+
+/* ─── MODAL HELPERS ─── */
+function open(id)  { document.getElementById(id).classList.add('open'); }
+function close(id) { document.getElementById(id).classList.remove('open'); }
+function bgClose(e, id) { if (e.target === document.getElementById(id)) close(id); }
+
+/* ─── ADD MODAL ─── */
+function openAdd() {
+  document.getElementById('f-title').value   = '';
+  document.getElementById('f-period').value  = '';
+  document.getElementById('f-url').value     = '';
+  document.getElementById('f-memo').value    = '';
+  document.getElementById('f-donedate').value = todayStr();
+  setReg('A');
+  setStatus('pending');
+  open('addModal');
+}
+function setReg(r) {
+  fReg = r;
+  document.getElementById('t-regA').className = 'tgl ' + (r === 'A' ? 'tgl-accent' : 'tgl-off');
+  document.getElementById('t-regB').className = 'tgl ' + (r === 'B' ? 'tgl-accent' : 'tgl-off');
+}
+function setStatus(s) {
+  fStatus = s;
+  document.getElementById('t-pending').className = 'tgl ' + (s === 'pending' ? 'tgl-orange' : 'tgl-off');
+  document.getElementById('t-done'   ).className = 'tgl ' + (s === 'done'    ? 'tgl-green'  : 'tgl-off');
+  document.getElementById('doneDateRow').style.display = s === 'done' ? 'flex' : 'none';
+}
+function submitAdd() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { alert('タイトルを入力してください'); return; }
+  const doneDate = fStatus === 'done'
+    ? (document.getElementById('f-donedate').value || todayStr()) : null;
+  items.push({
+    id: uid(), title,
+    regDate: todayStr(),
+    period:  document.getElementById('f-period').value.trim(),
+    url:     document.getElementById('f-url').value.trim(),
+    memo:    document.getElementById('f-memo').value.trim(),
+    registrar: fReg,
+    status:  fStatus,
+    doneDate,
+    createdAt: new Date().toISOString(),
+  });
+  persist();
+  close('addModal');
+  render();
+}
+
+/* ─── DETAIL MODAL ─── */
+function openDetail(id) {
+  const w = items.find(x => x.id === id); if (!w) return;
+
+  document.getElementById('detBody').innerHTML = `
+    <div class="det-title">${w.title}</div>
+    <div class="det-row"><span class="det-k">ステータス</span><span class="det-v">${w.status === 'done' ? '✅ 実行済み' : '⏳ 未実行'}</span></div>
+    <div class="det-row"><span class="det-k">登録者</span>    <span class="det-v">${w.registrar === 'A' ? '自分 (A)' : '相手 (B)'}</span></div>
+    <div class="det-row"><span class="det-k">登録日</span>    <span class="det-v">${fmtDay(w.regDate)}</span></div>
+    ${w.doneDate ? `<div class="det-row"><span class="det-k">実行日</span><span class="det-v">${fmtDay(w.doneDate)}</span></div>` : ''}
+    ${w.period   ? `<div class="det-row"><span class="det-k">イベント期間</span><span class="det-v">${w.period}</span></div>` : ''}
+    ${w.url      ? `<div class="det-row"><span class="det-k">URL</span><span class="det-v"><a href="${w.url}" target="_blank">${w.url}</a></span></div>` : ''}
+    ${w.memo     ? `<div class="det-row"><span class="det-k">メモ</span><span class="det-v">${w.memo}</span></div>` : ''}
+  `;
+
+  const toggleBtn = document.getElementById('toggleBtn');
+  if (w.status === 'done') {
+    toggleBtn.textContent = '↩ 未実行に戻す';
+    toggleBtn.className   = 'ok-btn orange';
+    toggleBtn.onclick = () => {
+      w.status = 'pending'; w.doneDate = null;
+      persist(); close('detModal'); render();
+    };
+  } else {
+    toggleBtn.textContent = '✅ 実行済みにする';
+    toggleBtn.className   = 'ok-btn green';
+    toggleBtn.onclick = () => {
+      w.status = 'done'; w.doneDate = todayStr();
+      persist(); close('detModal'); render();
+    };
+  }
+
+  document.getElementById('delBtn').onclick = () => {
+    if (!confirm('削除しますか？')) return;
+    items = items.filter(x => x.id !== id);
+    persist(); close('detModal'); render();
+  };
+
+  open('detModal');
+}
+
+/* ─── FILTER ─── */
+function openFilter() {
+  applyFilterUI();
+  open('filterModal');
+}
+function applyFilterUI() {
+  ['all','pending','done'].forEach(k =>
+    document.getElementById('fil-'+k).className = 'tgl ' + (filterStatus === k ? (k==='done'?'tgl-green':k==='pending'?'tgl-orange':'tgl-accent') : 'tgl-off')
+  );
+  ['all','A','B'].forEach(k =>
+    document.getElementById('fil-reg'+(k==='all'?'All':k)).className = 'tgl ' + (filterReg === k ? 'tgl-accent' : 'tgl-off')
+  );
+  ['reg','done'].forEach(k =>
+    document.getElementById('sort-'+k).className = 'tgl ' + (sortKey === k ? 'tgl-accent' : 'tgl-off')
+  );
+}
+function setFilter(v)    { filterStatus = v; applyFilterUI(); }
+function setRegFilter(v) { filterReg    = v; applyFilterUI(); }
+function setSort(v)      { sortKey      = v; applyFilterUI(); }
+
+/* ─── BINGO navigation placeholder ─── */
+function goToBingo() {
+  alert('ビンゴ画面は別途作成予定です');
+}
+
+/* ─── INIT ─── */
+autoDelete();
+applyFilterUI();
+render();
+</script>
+</body>
+</html>
