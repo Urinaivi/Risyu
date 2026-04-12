@@ -7,40 +7,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#f2f2f7;--card:#fff;--text:#1c1c1e;--sub:#6b7280;--muted:#aeaeb2;
-  --border:rgba(0,0,0,0.07);--accent:#7c7aff;--green:#34c759;
-  --red:#ff3b30;--orange:#ff9500;--pink:#ff2d55;--blue:#007aff;
-  --r:14px;--nav:62px;
-}
-html,body{
-  height:100%;background:#c9c9ce;
-  display:flex;justify-content:center;align-items:center;
-  font-family:'Noto Sans JP',sans-serif;-webkit-font-smoothing:antialiased;
-  overscroll-behavior:none;
-}
-.phone{
-  width:min(390px,100vw);
-  height:min(844px,100dvh);
-  background:var(--bg);
-  border-radius:clamp(0px,calc((100vw - 390px)*-99),48px);
-  overflow:hidden;position:relative;display:flex;flex-direction:column;
-  box-shadow:0 40px 80px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.09);
-}
-.hdr{
-  padding:max(52px,env(safe-area-inset-top,52px)) 20px 12px;
-  background:var(--bg);flex-shrink:0;
-  display:flex;align-items:flex-end;justify-content:space-between;
-}
+:root{--bg:#f2f2f7;--card:#fff;--text:#1c1c1e;--sub:#6b7280;--muted:#aeaeb2;--border:rgba(0,0,0,0.07);--accent:#7c7aff;--green:#34c759;--red:#ff3b30;--orange:#ff9500;--pink:#ff2d55;--blue:#007aff;--r:14px;--nav:62px}
+html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;align-items:center;font-family:'Noto Sans JP',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+.phone{width:min(390px,100vw);height:min(844px,100dvh);background:var(--bg);border-radius:clamp(0px,calc((100vw - 390px)*-99),48px);overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 40px 80px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.09)}
+.hdr{padding:max(52px,env(safe-area-inset-top,52px)) 20px 12px;background:var(--bg);flex-shrink:0;display:flex;align-items:flex-end;justify-content:space-between}
 .hdr-greeting{font-size:13px;color:var(--sub);font-weight:400;margin-bottom:2px}
 .hdr-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.3px}
 .hdr-date{font-size:12px;color:var(--muted);margin-top:2px}
-.refresh-btn{
-  width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;
-  background:var(--card);display:flex;align-items:center;justify-content:center;
-  font-size:18px;color:var(--sub);box-shadow:0 1px 6px rgba(0,0,0,.08);
-  transition:transform .3s,background .15s;flex-shrink:0;margin-bottom:2px;
-}
+.hdr-right{display:flex;align-items:flex-end;gap:8px}
+.user-chip{display:flex;align-items:center;gap:6px;background:var(--card);border-radius:20px;padding:6px 12px 6px 6px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.06);transition:background .15s}
+.user-chip:active{background:#e5e5ea}
+.user-chip-icon{font-size:20px}
+.user-chip-name{font-size:12px;font-weight:600;color:var(--text)}
+.refresh-btn{width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--sub);box-shadow:0 1px 4px rgba(0,0,0,.06);transition:transform .3s,background .15s;flex-shrink:0}
 .refresh-btn:active{background:#e5e5ea}
 .refresh-btn.spin{animation:spin .5s ease}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
@@ -81,15 +60,10 @@ html,body{
 .event-title{font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .event-period{font-size:12px;color:var(--sub);margin-top:2px}
 .empty-small{padding:20px;text-align:center;font-size:13px;color:var(--muted);background:var(--card);border-radius:var(--r)}
-.nav{
-  height:calc(var(--nav) + env(safe-area-inset-bottom,0px));
-  padding-bottom:env(safe-area-inset-bottom,0px);
-  background:rgba(250,250,250,.96);border-top:.5px solid var(--border);
-  display:flex;align-items:flex-start;flex-shrink:0;backdrop-filter:blur(20px);z-index:30;
-}
+.nav{height:calc(var(--nav) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);background:rgba(250,250,250,.96);border-top:.5px solid var(--border);display:flex;align-items:flex-start;flex-shrink:0;backdrop-filter:blur(20px);z-index:30}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:10px 0 6px;border:none;background:none;-webkit-tap-highlight-color:transparent;transition:transform .1s}
 .nav-item:active{transform:scale(.88)}
-.nav-icon{font-size:22px;line-height:1}
+.nav-icon{font-size:20px;line-height:1}
 .nav-lbl{font-size:10px;font-weight:500;color:var(--muted)}
 .nav-item.active .nav-lbl{color:var(--accent);font-weight:700}
 @keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -104,55 +78,71 @@ html,body{
   <div class="hdr">
     <div>
       <div class="hdr-greeting" id="greeting"></div>
-      <div class="hdr-title">ふたりのアプリ 💑</div>
+      <div class="hdr-title">Risyu💗</div>
       <div class="hdr-date" id="todayDate"></div>
     </div>
-    <button class="refresh-btn" id="refreshBtn" onclick="doRefresh()">🔄</button>
+    <div class="hdr-right">
+      <div class="user-chip" id="userChip" onclick="location.href='mypage.html'">
+        <span class="user-chip-icon" id="userIcon"></span>
+        <span class="user-chip-name" id="userName"></span>
+      </div>
+      <button class="refresh-btn" id="refreshBtn" onclick="doRefresh()">🔄</button>
+    </div>
   </div>
   <div class="scroll" id="scroll"></div>
-  <nav class="nav">
-    <button class="nav-item active" onclick="goTo('home')"><span class="nav-icon">🏠</span><span class="nav-lbl">ホーム</span></button>
-    <button class="nav-item" onclick="goTo('pay')"><span class="nav-icon">💰</span><span class="nav-lbl">支払い</span></button>
-    <button class="nav-item" onclick="goTo('wants')"><span class="nav-icon">📋</span><span class="nav-lbl">やりたい</span></button>
-    <button class="nav-item" onclick="goTo('stamp')"><span class="nav-icon">🔖</span><span class="nav-lbl">スタンプ</span></button>
-  </nav>
+  <nav class="nav" id="nav"></nav>
 </div>
+<script src="auth.js"></script>
 <script>
 function yen(n){return'¥'+Number(n).toLocaleString()}
 function todayStr(){return new Date().toISOString().slice(0,10)}
-function loadPayments(){try{const d=JSON.parse(localStorage.getItem('pay_v1'));return Array.isArray(d)?d:spd()}catch{return spd()}}
-function loadWants(){try{const d=JSON.parse(localStorage.getItem('wants_v1'));return Array.isArray(d)?d:swd()}catch{return swd()}}
-function loadStamp(){try{const d=JSON.parse(localStorage.getItem('stamp_v1'));return(d&&Array.isArray(d.cards))?d:ssd()}catch{return ssd()}}
-function spd(){return[{date:'2026-04-06T14:00',amount:800,who:'A',status:'unpaid'},{date:'2026-04-04T12:00',amount:1000,who:'B',status:'unpaid'}]}
-function swd(){return[{title:'花畑へ行く',registrar:'A',status:'pending',regDate:'2026-03-02',period:'2026/4/1〜4/30'},{title:'動物園',registrar:'B',status:'done',regDate:'2026-03-02',doneDate:'2026-03-15'}]}
-function ssd(){return{cards:[{cells:Array(30).fill(false),stampDates:Array(30).fill(null),completed:false,goal:'毎日の目標',startDate:new Date().toISOString()}]}}
+function loadPayments(){try{const d=JSON.parse(localStorage.getItem('pay_v1'));return Array.isArray(d)?d:[]}catch{return[]}}
+function loadWants(){try{const d=JSON.parse(localStorage.getItem('wants_v1'));return Array.isArray(d)?d:[]}catch{return[]}}
+function loadStamp(){
+  const u=currentUser();
+  const key='stamp_v1_'+u.id;
+  try{const d=JSON.parse(localStorage.getItem(key));return(d&&Array.isArray(d.cards))?d:{cards:[{cells:Array(30).fill(false),stampDates:Array(30).fill(null),completed:false,goal:'毎日の目標',startDate:new Date().toISOString()}]}}catch{return{cards:[{cells:Array(30).fill(false),stampDates:Array(30).fill(null),completed:false,goal:'毎日の目標',startDate:new Date().toISOString()}]}}
+}
+
+function init(){
+  if(!requireLogin())return;
+  const u=currentUser();
+  applyTheme(u.theme);
+  document.getElementById('userIcon').textContent=u.icon;
+  document.getElementById('userName').textContent=u.name;
+  document.getElementById('nav').innerHTML=navHTML('home');
+  renderHeader();render();
+  setInterval(()=>{renderHeader();render()},60000);
+}
 
 function renderHeader(){
   const h=new Date().getHours();
-  document.getElementById('greeting').textContent=h<5?'おやすみなさい 🌙':h<12?'おはようございます ☀️':h<17?'こんにちは 🌤':'こんばんは 🌙';
+  const u=currentUser();
+  document.getElementById('greeting').textContent=(h<5?'おやすみなさい 🌙':h<12?'おはようございます ☀️':h<17?'こんにちは 🌤':'こんばんは 🌙')+' '+u.name+'さん';
   const d=new Date(),w=['日','月','火','水','木','金','土'];
   document.getElementById('todayDate').textContent=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${w[d.getDay()]}）`;
 }
 
 function doRefresh(){
   const btn=document.getElementById('refreshBtn');
-  btn.classList.add('spin');
-  setTimeout(()=>btn.classList.remove('spin'),500);
+  btn.classList.add('spin');setTimeout(()=>btn.classList.remove('spin'),500);
   renderHeader();render();
 }
 
 function render(){
   const pays=loadPayments(),wants=loadWants(),stamp=loadStamp();
-  const unA=pays.filter(p=>p.who==='A'&&p.status==='unpaid').reduce((s,p)=>s+p.amount,0);
-  const unB=pays.filter(p=>p.who==='B'&&p.status==='unpaid').reduce((s,p)=>s+p.amount,0);
-  const diff=unB-unA,diffAbs=Math.abs(diff);
-  const diffDesc=diff>0?`相手 (B) が ${yen(diffAbs)} 多く払うべき状態です`:diff<0?`あなた (A) が ${yen(diffAbs)} 多く払うべき状態です`:'お互いの支払いは釣り合っています ✨';
+  const u=currentUser(),p=getAccount(partnerId());
+  const myId=u.id,pId=p.id;
+  const unMe=pays.filter(x=>x.who===myId&&x.status==='unpaid').reduce((s,x)=>s+x.amount,0);
+  const unPt=pays.filter(x=>x.who===pId&&x.status==='unpaid').reduce((s,x)=>s+x.amount,0);
+  const diff=unPt-unMe,diffAbs=Math.abs(diff);
+  const diffDesc=diff>0?`${p.name}が ${yen(diffAbs)} 多く払うべき状態`:diff<0?`${u.name}が ${yen(diffAbs)} 多く払うべき状態`:'お互いの支払いは釣り合っています ✨';
   const wTotal=wants.length,wDone=wants.filter(w=>w.status==='done').length,wPending=wants.filter(w=>w.status==='pending').length,wPct=wTotal?Math.round(wDone/wTotal*100):0;
   const lc=stamp.cards[stamp.cards.length-1];
   const sStamped=lc?lc.cells.filter(Boolean).length:0;
   const sTodayDone=lc?lc.stampDates.some(d=>d&&d.startsWith(todayStr())):false;
   const sComp=lc?.completed||false,sPct=Math.round(sStamped/30*100);
-  const notices=buildNotices(pays,wants,lc,sTodayDone,sComp);
+  const notices=buildNotices(pays,wants,lc,sTodayDone,sComp,u,p);
   const today=new Date();today.setHours(0,0,0,0);
   const upcoming=wants.filter(w=>w.status==='pending'&&w.period).map(w=>{const e=parseEnd(w.period);return e?{...w,e,days:Math.ceil((e-today)/86400000)}:null}).filter(Boolean).sort((a,b)=>a.days-b.days).slice(0,4);
 
@@ -162,8 +152,8 @@ function render(){
       <div class="hero-amount">${yen(diffAbs)}</div>
       <div class="hero-desc">${diffDesc}</div>
       <div class="hero-sub-row">
-        <div class="hero-sub-item"><div class="hero-sub-label">自分 (A) 未払い</div><div class="hero-sub-val">${yen(unA)}</div></div>
-        <div class="hero-sub-item"><div class="hero-sub-label">相手 (B) 未払い</div><div class="hero-sub-val">${yen(unB)}</div></div>
+        <div class="hero-sub-item"><div class="hero-sub-label">${u.icon} ${u.name}の未払い</div><div class="hero-sub-val">${yen(unMe)}</div></div>
+        <div class="hero-sub-item"><div class="hero-sub-label">${p.icon} ${p.name}の未払い</div><div class="hero-sub-val">${yen(unPt)}</div></div>
       </div>
     </div>
     <div class="grid2 section-anim">
@@ -176,21 +166,20 @@ function render(){
     <div style="height:6px"></div>`;
 }
 
-function buildNotices(pays,wants,lc,sTodayDone,sComp){
+function buildNotices(pays,wants,lc,sTodayDone,sComp,u,p){
   const notices=[],today=new Date();today.setHours(0,0,0,0);
-  const unA=pays.filter(p=>p.who==='A'&&p.status==='unpaid').reduce((s,p)=>s+p.amount,0);
-  const unB=pays.filter(p=>p.who==='B'&&p.status==='unpaid').reduce((s,p)=>s+p.amount,0);
-  if(unA>0)notices.push({dot:'nd-red',title:`あなたの未払いが ${yen(unA)} あります`,sub:'支払い管理から確認できます',screen:'pay'});
-  if(unB>0)notices.push({dot:'nd-orange',title:`相手の未払いが ${yen(unB)} あります`,sub:'支払い管理から確認できます',screen:'pay'});
+  const unMe=pays.filter(x=>x.who===u.id&&x.status==='unpaid').reduce((s,x)=>s+x.amount,0);
+  const unPt=pays.filter(x=>x.who===p.id&&x.status==='unpaid').reduce((s,x)=>s+x.amount,0);
+  if(unMe>0)notices.push({dot:'nd-red',title:`${u.name}の未払いが ${yen(unMe)} あります`,sub:'支払い管理から確認できます',screen:'pay'});
+  if(unPt>0)notices.push({dot:'nd-orange',title:`${p.name}の未払いが ${yen(unPt)} あります`,sub:'支払い管理から確認できます',screen:'pay'});
   if(!sComp&&!sTodayDone&&lc){const r=30-lc.cells.filter(Boolean).length;notices.push({dot:'nd-purple',title:'今日のスタンプがまだ押せます',sub:`残り ${r} マス`,screen:'stamp'})}
   wants.filter(w=>w.status==='pending'&&w.period).forEach(w=>{const e=parseEnd(w.period);if(!e)return;const days=Math.ceil((e-today)/86400000);if(days>=0&&days<=3)notices.push({dot:days===0?'nd-red':'nd-blue',title:`「${w.title}」の期限まであと ${days===0?'今日！':days+'日'}`,sub:w.period,screen:'wants'})});
   return notices;
 }
 function parseEnd(period){if(!period)return null;const m=period.match(/(\d{4}\/\d{1,2}\/\d{1,2})/g);if(!m||m.length<2)return null;const d=new Date(m[1].replace(/\//g,'-'));return isNaN(d)?null:d}
-function goTo(s){const m={pay:'01_payment.html',wants:'02_wants.html',stamp:'03_stamp.html',bingo:'04_bingo.html'};if(m[s])window.location.href=m[s]}
+function goTo(s){const m={pay:'01_payment.html',wants:'02_wants.html',stamp:'03_stamp.html',bingo:'04_bingo.html',mypage:'mypage.html'};if(m[s])location.href=m[s]}
 
-renderHeader();render();
-setInterval(()=>{renderHeader();render()},60000);
+init();
 </script>
 </body>
 </html>

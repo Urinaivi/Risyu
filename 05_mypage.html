@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<title>マイページ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f2f2f7;--card:#fff;--text:#1c1c1e;--sub:#6b7280;--muted:#aeaeb2;--border:rgba(0,0,0,0.07);--accent:#7c7aff;--green:#34c759;--red:#ff3b30;--r:14px;--nav:62px}
+html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;align-items:center;font-family:'Noto Sans JP',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+.phone{width:min(390px,100vw);height:min(844px,100dvh);background:var(--bg);border-radius:clamp(0px,calc((100vw - 390px)*-99),48px);overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 40px 80px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.09)}
+.hdr{padding:max(52px,env(safe-area-inset-top,52px)) 20px 12px;background:var(--bg);flex-shrink:0;display:flex;align-items:flex-end;justify-content:space-between}
+.hdr-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.3px}
+.logout-btn{font-size:12px;font-weight:600;color:var(--red);background:#ffe5e4;border:none;border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'Noto Sans JP',sans-serif}
+.scroll{flex:1;overflow-y:auto;padding:12px 16px 20px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ─ Profile card ─ */
+.profile-card{
+  background:linear-gradient(135deg,var(--accent) 0%,#a78bfa 100%);
+  border-radius:20px;padding:24px 20px;margin-bottom:16px;
+  display:flex;align-items:center;gap:16px;color:#fff;
+}
+.profile-icon{font-size:52px;width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:transform .15s}
+.profile-icon:active{transform:scale(.92)}
+.profile-info{}
+.profile-name{font-size:22px;font-weight:700;margin-bottom:3px}
+.profile-email{font-size:12px;opacity:.85}
+.profile-id{font-size:11px;opacity:.7;margin-top:2px}
+
+/* ─ Section ─ */
+.sec-lbl{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.06em;text-transform:uppercase;padding:14px 2px 8px}
+.setting-card{background:var(--card);border-radius:var(--r);overflow:hidden;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.s-row{display:flex;align-items:center;padding:14px 16px;border-bottom:.5px solid var(--border);gap:12px;cursor:pointer;transition:background .12s;-webkit-tap-highlight-color:transparent}
+.s-row:last-child{border-bottom:none}
+.s-row:active{background:#f5f5fa}
+.s-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+.s-label{flex:1;font-size:15px;color:var(--text)}
+.s-value{font-size:13px;color:var(--sub)}
+.s-arrow{color:var(--muted);font-size:16px}
+
+/* ─ Theme palette ─ */
+.theme-grid{display:flex;flex-wrap:wrap;gap:10px;padding:16px}
+.theme-dot{
+  width:44px;height:44px;border-radius:50%;cursor:pointer;
+  border:3px solid transparent;transition:transform .15s,border-color .2s;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+.theme-dot:active{transform:scale(.88)}
+.theme-dot.selected{border-color:var(--text)}
+
+/* ─ Icon grid ─ */
+.icon-grid{display:flex;flex-wrap:wrap;gap:8px;padding:16px}
+.icon-btn{
+  width:52px;height:52px;border-radius:50%;background:#f0f0f5;
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+  cursor:pointer;border:3px solid transparent;transition:transform .15s,border-color .2s;
+}
+.icon-btn:active{transform:scale(.88)}
+.icon-btn.selected{border-color:var(--accent)}
+
+/* ─ Nav ─ */
+.nav{height:calc(var(--nav) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);background:rgba(250,250,250,.96);border-top:.5px solid var(--border);display:flex;align-items:flex-start;flex-shrink:0;backdrop-filter:blur(20px);z-index:30}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:10px 0 6px;border:none;background:none;-webkit-tap-highlight-color:transparent;transition:transform .1s}
+.nav-item:active{transform:scale(.88)}
+.nav-icon{font-size:20px;line-height:1}
+.nav-lbl{font-size:10px;font-weight:500;color:var(--muted)}
+.nav-item.active .nav-lbl{color:var(--accent);font-weight:700}
+
+/* ─ Overlay / Sheet ─ */
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,.42);z-index:100;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .22s}
+.overlay.open{opacity:1;pointer-events:all}
+.sheet{width:100%;background:var(--bg);border-radius:24px 24px 0 0;transform:translateY(100%);max-height:80%;overflow-y:auto;transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.overlay.open .sheet{transform:translateY(0)}
+.sh-handle{width:36px;height:4px;background:#c7c7cc;border-radius:2px;margin:12px auto 0}
+.sh-hdr{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 10px}
+.sh-title{font-size:17px;font-weight:700;color:var(--text)}
+.x-btn{width:28px;height:28px;border-radius:50%;background:#e4e4e9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--sub)}
+.f-card{background:var(--card);border-radius:var(--r);margin:0 16px 10px;overflow:hidden}
+.f-row2{display:flex;align-items:center;padding:13px 16px;border-bottom:.5px solid var(--border);gap:10px}
+.f-row2:last-child{border-bottom:none}
+.f-lbl{font-size:15px;color:var(--text);min-width:80px;flex-shrink:0}
+.f-inp{flex:1;border:none;outline:none;font-size:15px;font-family:'Noto Sans JP',sans-serif;color:var(--text);background:transparent;text-align:right}
+.f-inp::placeholder{color:#c7c7cc}
+.ok-btn{display:block;width:calc(100% - 32px);margin:2px 16px 22px;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:opacity .15s}
+.ok-btn:active{opacity:.82}
+.err{color:var(--red);font-size:12px;padding:4px 16px;display:none}
+.err.show{display:block}
+.ok-msg{color:var(--green);font-size:12px;padding:4px 16px;display:none}
+.ok-msg.show{display:block}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="hdr">
+    <div class="hdr-title">マイページ</div>
+    <button class="logout-btn" onclick="doLogout()">ログアウト</button>
+  </div>
+
+  <div class="scroll" id="scroll"></div>
+
+  <nav class="nav" id="nav"></nav>
+
+  <!-- 名前変更 -->
+  <div class="overlay" id="nameModal" onclick="bgClose(event,'nameModal')">
+    <div class="sheet">
+      <div class="sh-handle"></div>
+      <div class="sh-hdr"><span class="sh-title">名前を変更</span><button class="x-btn" onclick="closeM('nameModal')">✕</button></div>
+      <div class="f-card"><div class="f-row2"><span class="f-lbl">新しい名前</span><input class="f-inp" type="text" id="nameInput" placeholder="例：りな"/></div></div>
+      <div class="err" id="nameErr">名前を入力してください</div>
+      <button class="ok-btn" onclick="saveName()">保存する</button>
+    </div>
+  </div>
+
+  <!-- パスワード変更 -->
+  <div class="overlay" id="pwModal" onclick="bgClose(event,'pwModal')">
+    <div class="sheet">
+      <div class="sh-handle"></div>
+      <div class="sh-hdr"><span class="sh-title">パスワードを変更</span><button class="x-btn" onclick="closeM('pwModal')">✕</button></div>
+      <div class="f-card">
+        <div class="f-row2"><span class="f-lbl">現在のPW</span><input class="f-inp" type="password" id="pwOld" placeholder="現在のパスワード"/></div>
+        <div class="f-row2"><span class="f-lbl">新しいPW</span><input class="f-inp" type="password" id="pwNew" placeholder="新しいパスワード"/></div>
+        <div class="f-row2"><span class="f-lbl">確認</span><input class="f-inp" type="password" id="pwConf" placeholder="もう一度入力"/></div>
+      </div>
+      <div class="err" id="pwErr"></div>
+      <div class="ok-msg" id="pwOk">パスワードを変更しました！</div>
+      <button class="ok-btn" onclick="savePw()">変更する</button>
+    </div>
+  </div>
+
+  <!-- テーマカラー -->
+  <div class="overlay" id="themeModal" onclick="bgClose(event,'themeModal')">
+    <div class="sheet">
+      <div class="sh-handle"></div>
+      <div class="sh-hdr"><span class="sh-title">テーマカラーを選択</span><button class="x-btn" onclick="closeM('themeModal')">✕</button></div>
+      <div class="theme-grid" id="themeGrid"></div>
+      <button class="ok-btn" onclick="saveTheme()">適用する</button>
+    </div>
+  </div>
+
+  <!-- アイコン変更 -->
+  <div class="overlay" id="iconModal" onclick="bgClose(event,'iconModal')">
+    <div class="sheet">
+      <div class="sh-handle"></div>
+      <div class="sh-hdr"><span class="sh-title">アイコンを選択</span><button class="x-btn" onclick="closeM('iconModal')">✕</button></div>
+      <div class="icon-grid" id="iconGrid"></div>
+      <button class="ok-btn" onclick="saveIcon()">適用する</button>
+    </div>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script>
+const THEMES = [
+  { color:'#7c7aff', name:'パープル' },
+  { color:'#ff2d55', name:'ピンク' },
+  { color:'#34c759', name:'グリーン' },
+  { color:'#007aff', name:'ブルー' },
+  { color:'#ff9500', name:'オレンジ' },
+  { color:'#ff3b30', name:'レッド' },
+  { color:'#5ac8fa', name:'スカイ' },
+  { color:'#af52de', name:'バイオレット' },
+  { color:'#30b0c7', name:'ティール' },
+  { color:'#a2845e', name:'ブラウン' },
+];
+
+const ICONS = ['🌸','🌊','🦋','🐼','🦊','🌙','⭐','🌈','🎸','🍀',
+               '🐶','🐱','🐸','🦄','🐻','🌺','🍁','❄️','🔥','💎'];
+
+let selectedTheme = null;
+let selectedIcon  = null;
+
+function init() {
+  if (!requireLogin()) return;
+  const u = currentUser();
+  applyTheme(u.theme);
+  selectedTheme = u.theme;
+  selectedIcon  = u.icon;
+  renderPage();
+  document.getElementById('nav').innerHTML = navHTML('mypage');
+}
+
+function renderPage() {
+  const u = currentUser();
+  const partner = getAccount(partnerId());
+  const el = document.getElementById('scroll');
+  el.innerHTML = `
+    <!-- プロフィール -->
+    <div class="profile-card" style="background:linear-gradient(135deg,${u.theme} 0%,${u.theme}99 100%)">
+      <div class="profile-icon" onclick="openIconModal()">${u.icon}</div>
+      <div class="profile-info">
+        <div class="profile-name">${u.name}</div>
+        <div class="profile-email">${u.email}</div>
+        <div class="profile-id">ユーザー ${u.id}</div>
+      </div>
+    </div>
+
+    <div class="sec-lbl">アカウント設定</div>
+    <div class="setting-card">
+      <div class="s-row" onclick="openNameModal()">
+        <span class="s-icon">✏️</span>
+        <span class="s-label">名前を変更</span>
+        <span class="s-value">${u.name}</span>
+        <span class="s-arrow">›</span>
+      </div>
+      <div class="s-row" onclick="openPwModal()">
+        <span class="s-icon">🔒</span>
+        <span class="s-label">パスワードを変更</span>
+        <span class="s-value">••••••</span>
+        <span class="s-arrow">›</span>
+      </div>
+    </div>
+
+    <div class="sec-lbl">カスタマイズ</div>
+    <div class="setting-card">
+      <div class="s-row" onclick="openThemeModal()">
+        <span class="s-icon" style="color:${u.theme}">🎨</span>
+        <span class="s-label">テーマカラー</span>
+        <span style="width:20px;height:20px;border-radius:50%;background:${u.theme};display:inline-block"></span>
+        <span class="s-arrow">›</span>
+      </div>
+      <div class="s-row" onclick="openIconModal()">
+        <span class="s-icon">${u.icon}</span>
+        <span class="s-label">アイコン</span>
+        <span class="s-value">${u.icon}</span>
+        <span class="s-arrow">›</span>
+      </div>
+    </div>
+
+    <div class="sec-lbl">相手のアカウント</div>
+    <div class="setting-card">
+      <div class="s-row" style="cursor:default">
+        <span class="s-icon">${partner.icon}</span>
+        <div style="flex:1">
+          <div style="font-size:15px;color:var(--text)">${partner.name}</div>
+          <div style="font-size:12px;color:var(--sub)">${partner.email}</div>
+        </div>
+      </div>
+    </div>
+    <div style="height:8px"></div>
+  `;
+}
+
+/* ── ログアウト ── */
+function doLogout() {
+  if (!confirm('ログアウトしますか？')) return;
+  clearSession();
+  location.href = 'login.html';
+}
+
+/* ── 名前変更 ── */
+function openNameModal() {
+  document.getElementById('nameInput').value = currentUser().name;
+  document.getElementById('nameErr').classList.remove('show');
+  openM('nameModal');
+}
+function saveName() {
+  const val = document.getElementById('nameInput').value.trim();
+  if (!val) { document.getElementById('nameErr').classList.add('show'); return; }
+  const accs = getAccounts();
+  const idx = accs.findIndex(a => a.id === getSession());
+  accs[idx].name = val;
+  saveAccounts(accs);
+  closeM('nameModal');
+  renderPage();
+}
+
+/* ── パスワード変更 ── */
+function openPwModal() {
+  ['pwOld','pwNew','pwConf'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('pwErr').classList.remove('show');
+  document.getElementById('pwOk').classList.remove('show');
+  openM('pwModal');
+}
+function savePw() {
+  const old  = document.getElementById('pwOld').value;
+  const nw   = document.getElementById('pwNew').value;
+  const conf = document.getElementById('pwConf').value;
+  const err  = document.getElementById('pwErr');
+  const ok   = document.getElementById('pwOk');
+  err.classList.remove('show'); ok.classList.remove('show');
+
+  const accs = getAccounts();
+  const idx = accs.findIndex(a => a.id === getSession());
+  if (accs[idx].password !== old) { err.textContent = '現在のパスワードが違います'; err.classList.add('show'); return; }
+  if (!nw) { err.textContent = '新しいパスワードを入力してください'; err.classList.add('show'); return; }
+  if (nw !== conf) { err.textContent = 'パスワードが一致しません'; err.classList.add('show'); return; }
+
+  accs[idx].password = nw;
+  saveAccounts(accs);
+  ok.classList.add('show');
+  setTimeout(() => closeM('pwModal'), 1200);
+}
+
+/* ── テーマカラー ── */
+function openThemeModal() {
+  selectedTheme = currentUser().theme;
+  renderThemeGrid();
+  openM('themeModal');
+}
+function renderThemeGrid() {
+  document.getElementById('themeGrid').innerHTML = THEMES.map(t => `
+    <div class="theme-dot${t.color === selectedTheme ? ' selected' : ''}"
+         style="background:${t.color}"
+         onclick="selectTheme('${t.color}')">
+      ${t.color === selectedTheme ? '✓' : ''}
+    </div>`).join('');
+}
+function selectTheme(color) {
+  selectedTheme = color;
+  renderThemeGrid();
+}
+function saveTheme() {
+  const accs = getAccounts();
+  const idx = accs.findIndex(a => a.id === getSession());
+  accs[idx].theme = selectedTheme;
+  saveAccounts(accs);
+  applyTheme(selectedTheme);
+  closeM('themeModal');
+  renderPage();
+}
+
+/* ── アイコン ── */
+function openIconModal() {
+  selectedIcon = currentUser().icon;
+  renderIconGrid();
+  openM('iconModal');
+}
+function renderIconGrid() {
+  document.getElementById('iconGrid').innerHTML = ICONS.map(ic => `
+    <div class="icon-btn${ic === selectedIcon ? ' selected' : ''}"
+         onclick="selectIcon('${ic}')">${ic}</div>`).join('');
+}
+function selectIcon(icon) {
+  selectedIcon = icon;
+  renderIconGrid();
+}
+function saveIcon() {
+  const accs = getAccounts();
+  const idx = accs.findIndex(a => a.id === getSession());
+  accs[idx].icon = selectedIcon;
+  saveAccounts(accs);
+  closeM('iconModal');
+  renderPage();
+}
+
+/* ── Modal helpers ── */
+function openM(id)  { document.getElementById(id).classList.add('open'); }
+function closeM(id) { document.getElementById(id).classList.remove('open'); }
+function bgClose(e,id) { if (e.target === document.getElementById(id)) closeM(id); }
+
+init();
+</script>
+</body>
+</html>

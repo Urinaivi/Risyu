@@ -12,7 +12,7 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .phone{width:min(390px,100vw);height:min(844px,100dvh);background:var(--bg);border-radius:clamp(0px,calc((100vw - 390px)*-99),48px);overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 40px 80px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.09)}
 .hdr{padding:max(52px,env(safe-area-inset-top,52px)) 20px 10px;background:var(--bg);flex-shrink:0;display:flex;align-items:flex-end;justify-content:space-between}
 .hdr-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.3px}
-/* スクロール: 縦のみ許可 */
+.hdr-user{font-size:14px;color:var(--sub);font-weight:500}
 .scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px 14px 20px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
 .scroll::-webkit-scrollbar{display:none}
 .card-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
@@ -29,7 +29,6 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .progress-bar{flex:1;height:6px;background:#e5e5ea;border-radius:3px;overflow:hidden}
 .progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--pink));transition:width .4s ease}
 .progress-text{font-size:12px;font-weight:700;color:var(--sub);flex-shrink:0}
-/* スタンプグリッド: タッチ操作を縦スクロールのみに */
 .stamp-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;touch-action:pan-y}
 .stamp-cell{aspect-ratio:1;border-radius:8px;background:#f0f0f5;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .stamp-cell:active{transform:scale(.88)}
@@ -56,14 +55,13 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .today-badge.ok{background:#e3f9eb;color:var(--green)}
 .today-badge.wait{background:#fff3e0;color:var(--orange)}
 .today-badge.done{background:#f0f0f5;color:var(--sub)}
-/* FAB: 右下 */
 .fab{position:absolute;bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px) + 18px);right:18px;width:54px;height:54px;border-radius:50%;background:var(--pink);color:#fff;border:none;cursor:pointer;font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(255,45,85,.45);transition:transform .15s,box-shadow .15s;z-index:20}
 .fab:active{transform:scale(.91)}
 .fab:disabled{background:#d1d1d6;box-shadow:0 4px 12px rgba(0,0,0,.12);cursor:default}
 .nav{height:calc(var(--nav) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);background:rgba(250,250,250,.96);border-top:.5px solid var(--border);display:flex;align-items:flex-start;flex-shrink:0;backdrop-filter:blur(20px);z-index:30}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:10px 0 6px;border:none;background:none;-webkit-tap-highlight-color:transparent;transition:transform .1s}
 .nav-item:active{transform:scale(.88)}
-.nav-icon{font-size:22px;line-height:1}
+.nav-icon{font-size:20px;line-height:1}
 .nav-lbl{font-size:10px;font-weight:500;color:var(--muted)}
 .nav-item.active .nav-lbl{color:var(--accent);font-weight:700}
 .overlay{position:absolute;inset:0;background:rgba(0,0,0,.42);z-index:100;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .22s}
@@ -96,21 +94,16 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 <div class="phone">
   <div class="hdr">
     <div class="hdr-title">スタンプカード</div>
+    <div class="hdr-user" id="hdrUser"></div>
   </div>
   <div class="scroll" id="scroll"></div>
-  <!-- FABは右下（スタンプを押す） -->
   <button class="fab" id="stampFab" onclick="pressStamp()">🔖</button>
-  <nav class="nav">
-    <button class="nav-item" onclick="location.href='index.html'"><span class="nav-icon">🏠</span><span class="nav-lbl">ホーム</span></button>
-    <button class="nav-item" onclick="location.href='01_payment.html'"><span class="nav-icon">💰</span><span class="nav-lbl">支払い</span></button>
-    <button class="nav-item" onclick="location.href='02_wants.html'"><span class="nav-icon">📋</span><span class="nav-lbl">やりたい</span></button>
-    <button class="nav-item active"><span class="nav-icon">🔖</span><span class="nav-lbl">スタンプ</span></button>
-  </nav>
+  <nav class="nav" id="nav"></nav>
 
   <div class="overlay" id="rewardModal" onclick="bgClose(event,'rewardModal')">
     <div class="sheet">
       <div class="sh-handle"></div>
-      <div class="sh-hdr"><span class="sh-title">コンプリート報酬を編集</span><button class="x-btn" onclick="close2('rewardModal')">✕</button></div>
+      <div class="sh-hdr"><span class="sh-title">コンプリート報酬を編集</span><button class="x-btn" onclick="closeM('rewardModal')">✕</button></div>
       <div class="f-card"><div class="f-row"><span class="f-lbl">報酬内容</span><textarea class="f-inp" id="rewardInput" rows="3" placeholder="例：好きなレストランへのディナー 🍽️"></textarea></div></div>
       <button class="ok-btn" onclick="saveReward()">保存する</button>
     </div>
@@ -119,23 +112,36 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
   <div class="overlay" id="stampDetModal" onclick="bgClose(event,'stampDetModal')">
     <div class="sheet">
       <div class="sh-handle"></div>
-      <div class="sh-hdr"><span class="sh-title">スタンプ詳細</span><button class="x-btn" onclick="close2('stampDetModal')">✕</button></div>
+      <div class="sh-hdr"><span class="sh-title">スタンプ詳細</span><button class="x-btn" onclick="closeM('stampDetModal')">✕</button></div>
       <div id="stampDetBody"></div>
     </div>
   </div>
 </div>
 
+<script src="auth.js"></script>
 <script>
-const STORE='stamp_v1',REWARD_STORE='stamp_reward_v1';
+// スタンプカードはユーザーごとに独立したストレージキー
+let STORE, REWARD_STORE;
+let data, reward, cardIdx, U;
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function todayStr(){return new Date().toISOString().slice(0,10)}
 function fmtDT(s){if(!s)return'—';const d=new Date(s);if(isNaN(d))return s;const p=n=>String(n).padStart(2,'0');return`${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`}
 function fmtDay(s){if(!s)return'—';const d=new Date(s);if(isNaN(d))return s;const p=n=>String(n).padStart(2,'0');return`${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())}`}
 
-let data=loadData();
-let reward=localStorage.getItem(REWARD_STORE)||'互いに好きな報酬を決める 🎁';
-let cardIdx=data.cards.length-1;
+function init(){
+  if(!requireLogin())return;
+  U=currentUser();
+  applyTheme(U.theme);
+  STORE='stamp_v1_'+U.id;              // ← ユーザー固有キー
+  REWARD_STORE='stamp_reward_v1_'+U.id;
+  document.getElementById('hdrUser').textContent=U.icon+' '+U.name;
+  document.getElementById('nav').innerHTML=navHTML('stamp');
+  data=loadData();
+  reward=localStorage.getItem(REWARD_STORE)||'互いに好きな報酬を決める 🎁';
+  cardIdx=data.cards.length-1;
+  render();
+}
 
 function loadData(){
   try{const d=JSON.parse(localStorage.getItem(STORE));if(d&&Array.isArray(d.cards)&&d.cards.length)return d}catch{}
@@ -155,14 +161,14 @@ function render(){
   const todayOk=stampedToday(card),isLatest=cardIdx===cards.length-1;
   const fab=document.getElementById('stampFab');
   if(!isLatest||card.completed||todayOk){fab.disabled=true;fab.style.background='#d1d1d6';fab.style.boxShadow='0 4px 12px rgba(0,0,0,.12)'}
-  else{fab.disabled=false;fab.style.background='var(--pink)';fab.style.boxShadow='0 4px 18px rgba(255,45,85,.45)'}
+  else{fab.disabled=false;fab.style.background=U.theme||'var(--pink)';fab.style.boxShadow=`0 4px 18px ${U.theme||'var(--pink)'}55`}
   let badgeHTML='';
   if(card.completed)badgeHTML=`<div class="today-badge done">✨ コンプリート済み</div>`;
   else if(todayOk)badgeHTML=`<div class="today-badge ok">✅ 今日のスタンプ完了</div>`;
   else if(isLatest)badgeHTML=`<div class="today-badge wait">⏳ 今日のスタンプがまだです</div>`;
   const gridCells=card.cells.map((s,i)=>`<div class="${s?'stamp-cell stamped':'stamp-cell empty'}" id="cell-${i}" onclick="cellTap(${i})"></div>`).join('');
   const completeBanner=card.completed?`<div class="complete-banner"><div class="complete-banner-title">🎉 コンプリート！</div><div class="complete-banner-sub">${fmtDay(card.completedDate)} 達成</div></div>`:'';
-  el.innerHTML=`${badgeHTML}<div class="card-nav"><button class="nav-arrow" onclick="moveCard(-1)" ${cardIdx===0?'disabled':''}>‹</button><span class="card-nav-label">${cardIdx+1} / ${cards.length}</span><button class="nav-arrow" onclick="moveCard(1)" ${cardIdx===cards.length-1?'disabled':''}>›</button></div><div class="stamp-card ${card.completed?'completed':''} fade-in"><div class="sc-header"><div class="sc-title">${card.title}</div><div class="sc-period">開始: ${fmtDay(card.startDate)}</div><div class="sc-progress"><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><span class="progress-text">${stamped}/30</span></div></div><div class="stamp-grid">${gridCells}</div>${completeBanner}</div><div class="goal-card"><div class="goal-label">スタンプ目標</div><div class="goal-text">${card.goal||'目標を設定しましょう'}</div>${isLatest&&!card.completed?`<div class="goal-edit-row"><input class="goal-input" id="goalInput" value="${card.goal||''}" placeholder="目標を入力..."/><button class="goal-save-btn" onclick="saveGoal()">保存</button></div>`:''}</div><div class="reward-card"><div class="reward-header"><span class="reward-label">コンプリート報酬について</span><button class="reward-edit-btn" onclick="open2('rewardModal')">✏️ 編集</button></div><div class="reward-text">${reward}</div></div><div style="height:6px"></div>`;
+  el.innerHTML=`${badgeHTML}<div class="card-nav"><button class="nav-arrow" onclick="moveCard(-1)" ${cardIdx===0?'disabled':''}>‹</button><span class="card-nav-label">${cardIdx+1} / ${cards.length}</span><button class="nav-arrow" onclick="moveCard(1)" ${cardIdx===cards.length-1?'disabled':''}>›</button></div><div class="stamp-card ${card.completed?'completed':''} fade-in"><div class="sc-header"><div class="sc-title">${card.title}</div><div class="sc-period">開始: ${fmtDay(card.startDate)}</div><div class="sc-progress"><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:linear-gradient(90deg,${U.theme||'var(--accent)'},var(--pink))"></div></div><span class="progress-text">${stamped}/30</span></div></div><div class="stamp-grid">${gridCells}</div>${completeBanner}</div><div class="goal-card"><div class="goal-label">スタンプ目標</div><div class="goal-text">${card.goal||'目標を設定しましょう'}</div>${isLatest&&!card.completed?`<div class="goal-edit-row"><input class="goal-input" id="goalInput" value="${card.goal||''}" placeholder="目標を入力..."/><button class="goal-save-btn" onclick="saveGoal()" style="background:${U.theme||'var(--accent)'}">保存</button></div>`:''}</div><div class="reward-card"><div class="reward-header"><span class="reward-label">コンプリート報酬について</span><button class="reward-edit-btn" onclick="openM('rewardModal')" style="color:${U.theme||'var(--accent)'}">✏️ 編集</button></div><div class="reward-text">${reward}</div></div><div style="height:6px"></div>`;
 }
 
 function moveCard(dir){cardIdx=Math.max(0,Math.min(data.cards.length-1,cardIdx+dir));render()}
@@ -184,15 +190,14 @@ function pressStamp(){
 }
 
 function autoCreateNextCard(){
-  const newCard=createCard(`スタンプカード ${data.cards.length+1}`,data.cards[data.cards.length-1].goal||'毎日の目標');
-  data.cards.push(newCard);persist();
+  data.cards.push(createCard(`スタンプカード ${data.cards.length+1}`,data.cards[data.cards.length-1].goal||'毎日の目標'));
+  persist();
 }
 
 function cellTap(idx){
   const card=data.cards[cardIdx];if(!card.cells[idx])return;
-  const d=card.stampDates[idx];
-  document.getElementById('stampDetBody').innerHTML=`<div class="det-row"><span class="det-k">スタンプ番号</span><span class="det-v">${idx+1}番目</span></div><div class="det-row"><span class="det-k">押した日時</span><span class="det-v">${fmtDT(d)}</span></div>`;
-  open2('stampDetModal');
+  document.getElementById('stampDetBody').innerHTML=`<div class="det-row"><span class="det-k">スタンプ番号</span><span class="det-v">${idx+1}番目</span></div><div class="det-row"><span class="det-k">押した日時</span><span class="det-v">${fmtDT(card.stampDates[idx])}</span></div>`;
+  openM('stampDetModal');
 }
 
 function saveGoal(){
@@ -201,14 +206,16 @@ function saveGoal(){
   data.cards[cardIdx].goal=val;persist();render();
 }
 
-function open2(id){document.getElementById(id).classList.add('open')}
-function close2(id){document.getElementById(id).classList.remove('open')}
-function bgClose(e,id){if(e.target===document.getElementById(id))close2(id)}
+function openM(id){document.getElementById(id).classList.add('open')}
+function closeM(id){document.getElementById(id).classList.remove('open')}
+function bgClose(e,id){if(e.target===document.getElementById(id))closeM(id)}
 
-function openRewardModal(){document.getElementById('rewardInput').value=reward;open2('rewardModal')}
-function saveReward(){reward=document.getElementById('rewardInput').value.trim()||'報酬未設定';localStorage.setItem(REWARD_STORE,reward);close2('rewardModal');render()}
+function saveReward(){
+  reward=document.getElementById('rewardInput').value.trim()||'報酬未設定';
+  localStorage.setItem(REWARD_STORE,reward);closeM('rewardModal');render();
+}
 
-render();
+init();
 </script>
 </body>
 </html>

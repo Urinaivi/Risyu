@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<title>ログイン</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f2f2f7;--card:#fff;--text:#1c1c1e;--sub:#6b7280;--muted:#aeaeb2;--border:rgba(0,0,0,0.07);--accent:#7c7aff;--green:#34c759;--red:#ff3b30;--r:14px}
+html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;align-items:center;font-family:'Noto Sans JP',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+.phone{width:min(390px,100vw);height:min(844px,100dvh);background:var(--bg);border-radius:clamp(0px,calc((100vw - 390px)*-99),48px);overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 40px 80px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.09)}
+
+/* ─ Hero ─ */
+.hero{
+  background:linear-gradient(160deg,var(--accent) 0%,#a78bfa 100%);
+  padding:max(60px,env(safe-area-inset-top,60px)) 32px 40px;
+  flex-shrink:0;text-align:center;color:#fff;
+}
+.hero-icon{font-size:52px;margin-bottom:12px}
+.hero-title{font-size:26px;font-weight:700;margin-bottom:4px;letter-spacing:-.3px}
+.hero-sub{font-size:13px;opacity:.85;line-height:1.6}
+
+/* ─ Form area ─ */
+.form-area{flex:1;overflow-y:auto;padding:28px 20px 40px}
+.form-area::-webkit-scrollbar{display:none}
+
+.form-card{background:var(--card);border-radius:var(--r);overflow:hidden;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+.f-row{display:flex;align-items:center;padding:14px 16px;border-bottom:.5px solid var(--border);gap:12px}
+.f-row:last-child{border-bottom:none}
+.f-icon{font-size:18px;flex-shrink:0;width:24px;text-align:center}
+.f-inp{flex:1;border:none;outline:none;font-size:15px;font-family:'Noto Sans JP',sans-serif;color:var(--text);background:transparent}
+.f-inp::placeholder{color:var(--muted)}
+
+/* ─ Error ─ */
+.err-msg{background:#ffe5e4;color:var(--red);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:500;margin-bottom:12px;display:none}
+.err-msg.show{display:block}
+
+/* ─ Login button ─ */
+.login-btn{
+  width:100%;padding:16px;border:none;border-radius:var(--r);
+  background:var(--accent);color:#fff;font-size:16px;font-weight:700;
+  font-family:'Noto Sans JP',sans-serif;cursor:pointer;letter-spacing:.04em;
+  transition:opacity .15s,transform .12s;
+  box-shadow:0 4px 16px rgba(124,122,255,.4);
+}
+.login-btn:active{opacity:.85;transform:scale(.98)}
+
+/* ─ Account cards ─ */
+.account-label{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.06em;text-transform:uppercase;margin:20px 0 8px 4px}
+.acc-cards{display:flex;gap:8px}
+.acc-card{
+  flex:1;background:var(--card);border-radius:var(--r);
+  padding:16px 12px;text-align:center;cursor:pointer;
+  border:2px solid transparent;
+  transition:border-color .2s,transform .12s,box-shadow .2s;
+  box-shadow:0 1px 6px rgba(0,0,0,.05);
+}
+.acc-card:active{transform:scale(.96)}
+.acc-card.selected{border-color:var(--accent);box-shadow:0 2px 14px rgba(124,122,255,.2)}
+.acc-icon{font-size:32px;margin-bottom:6px}
+.acc-name{font-size:14px;font-weight:700;color:var(--text)}
+.acc-email{font-size:11px;color:var(--sub);margin-top:2px;word-break:break-all}
+
+.divider{display:flex;align-items:center;gap:10px;margin:20px 0}
+.divider-line{flex:1;height:.5px;background:var(--border)}
+.divider-text{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="hero">
+    <div class="hero-icon">💗</div>
+    <div class="hero-title">Risyu</div>
+    <div class="hero-sub">アカウントを選択してログインしてください</div>
+  </div>
+
+  <div class="form-area">
+    <!-- アカウント選択 -->
+    <div class="account-label">アカウントを選ぶ</div>
+    <div class="acc-cards" id="accCards"></div>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-text">パスワードを入力</div>
+      <div class="divider-line"></div>
+    </div>
+
+    <!-- パスワード -->
+    <div class="form-card">
+      <div class="f-row">
+        <span class="f-icon">🔒</span>
+        <input class="f-inp" type="password" id="pwInput" placeholder="パスワード" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+    </div>
+
+    <div class="err-msg" id="errMsg">メールアドレスまたはパスワードが違います</div>
+
+    <button class="login-btn" onclick="doLogin()">ログイン</button>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script>
+let selectedId = null;
+
+function init() {
+  // すでにログイン済みならホームへ
+  if (getSession()) { location.href = 'index.html'; return; }
+
+  const accounts = getAccounts();
+  const cards = document.getElementById('accCards');
+  cards.innerHTML = accounts.map(a => `
+    <div class="acc-card" id="acc-${a.id}" onclick="selectAcc('${a.id}')">
+      <div class="acc-icon">${a.icon}</div>
+      <div class="acc-name">${a.name}</div>
+      <div class="acc-email">${a.email}</div>
+    </div>`).join('');
+
+  // デフォルトで最初のアカウントを選択
+  selectAcc(accounts[0].id);
+}
+
+function selectAcc(id) {
+  selectedId = id;
+  getAccounts().forEach(a => {
+    const el = document.getElementById('acc-'+a.id);
+    if (el) el.className = 'acc-card' + (a.id === id ? ' selected' : '');
+  });
+  document.getElementById('pwInput').value = '';
+  document.getElementById('errMsg').classList.remove('show');
+}
+
+function doLogin() {
+  const pw = document.getElementById('pwInput').value;
+  const accs = getAccounts();
+  const acc = accs.find(a => a.id === selectedId);
+  if (!acc) { showErr(); return; }
+  if (acc.password !== pw) { showErr(); return; }
+  setSession(acc.id);
+  location.href = 'index.html';
+}
+
+function showErr() {
+  document.getElementById('errMsg').classList.add('show');
+  document.getElementById('pwInput').value = '';
+  document.getElementById('pwInput').focus();
+}
+
+init();
+</script>
+</body>
+</html>
