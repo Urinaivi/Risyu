@@ -13,6 +13,7 @@ const DEFAULT_ACCOUNTS = [
 
 /* ── ストレージキー ── */
 const KEYS = { accounts:'app_accounts', session:'app_session' };
+const SYNC_PENDING_KEY = 'app_sync_pending_v1';
 
 /* ────────────────────────────────────────────────────────────
    アカウント管理
@@ -41,6 +42,26 @@ function partnerId()    { const id=getSession();return id==='A'?'B':'A'; }
 function applyTheme(color) {
   if(!color){const u=currentUser();color=u?u.theme:'#fdc4ff';}
   document.documentElement.style.setProperty('--accent',color);
+}
+
+/* ────────────────────────────────────────────────────────────
+   多分ビンゴのやつ
+──────────────────────────────────────────────────────────── */
+function getSyncPendingMap(){
+  try{
+    const d=JSON.parse(localStorage.getItem(SYNC_PENDING_KEY));
+    if(d&&typeof d==='object')return d;
+  }catch{}
+  return {};
+}
+function setSyncPending(type,isPending){
+  const map=getSyncPendingMap();
+  if(isPending)map[type]=true;
+  else delete map[type];
+  localStorage.setItem(SYNC_PENDING_KEY,JSON.stringify(map));
+}
+function isSyncPending(type){
+  return !!getSyncPendingMap()[type];
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -120,10 +141,55 @@ async function saveAccountsRemote(accounts){
 async function syncOnLoad(targets=[],userId=''){
   if(!GAS_ENABLED)return;
   await Promise.all(targets.map(async t=>{
-    if(t==='payments'){const d=await loadPaymentsRemote();if(d)localStorage.setItem('pay_v1',JSON.stringify(d));}
-    else if(t==='wants'){const d=await loadWantsRemote();if(d)localStorage.setItem('wants_v1',JSON.stringify(d));}
-    else if(t==='stamp'&&userId){const d=await loadStampRemote(userId);if(d)localStorage.setItem('stamp_v1_'+userId,JSON.stringify(d));}
-    else if(t==='bingo'){const d=await loadBingoRemote();if(d)localStorage.setItem('bingo_v1',JSON.stringify(d));}
+    if(t==='payments'){
+      if(isSyncPending('payments')){
+        const local=JSON.parse(localStorage.getItem('pay_v1')||'[]');
+        if(Array.isArray(local)&&local.length){
+          const ok=await savePaymentsRemote(local);
+          if(ok)setSyncPending('payments',false);
+          return;
+        }
+      }
+      const d=await loadPaymentsRemote();
+      if(d)localStorage.setItem('pay_v1',JSON.stringify(d));
+    }
+    else if(t==='wants'){
+      if(isSyncPending('wants')){
+        const local=JSON.parse(localStorage.getItem('wants_v1')||'[]');
+        if(Array.isArray(local)&&local.length){
+          const ok=await saveWantsRemote(local);
+          if(ok)setSyncPending('wants',false);
+          return;
+        }
+      }
+      const d=await loadWantsRemote();
+      if(d)localStorage.setItem('wants_v1',JSON.stringify(d));
+    }
+    else if(t==='stamp'&&userId){
+      const type='stamp_'+userId;
+      if(isSyncPending(type)){
+        const local=JSON.parse(localStorage.getItem('stamp_v1_'+userId)||'null');
+        if(local){
+          const ok=await saveStampRemote(userId,local);
+          if(ok)setSyncPending(type,false);
+          return;
+        }
+      }
+      const d=await loadStampRemote(userId);
+      if(d)localStorage.setItem('stamp_v1_'+userId,JSON.stringify(d));
+    }
+    else if(t==='bingo'){
+      if(isSyncPending('bingo')){
+        const local=JSON.parse(localStorage.getItem('bingo_v1')||'null');
+        if(local){
+          const ok=await saveBingoRemote(local);
+          if(ok)setSyncPending('bingo',false);
+          return;
+        }
+      }
+      const d=await loadBingoRemote();
+      if(d)localStorage.setItem('bingo_v1',JSON.stringify(d));
+    }
     else if(t==='accounts'){await syncAccountsRemote();}
   }));
 }
@@ -133,11 +199,15 @@ async function syncOnLoad(targets=[],userId=''){
 ──────────────────────────────────────────────────────────── */
 function syncOnSave(type,data,userId=''){
   if(!GAS_ENABLED)return;
+  const pendingType=type==='stamp'&&userId?`stamp_${userId}`:type;
+  setSyncPending(pendingType,true);
   (async()=>{
-    if(type==='payments')      await savePaymentsRemote(data);
-    else if(type==='wants')    await saveWantsRemote(data);
-    else if(type==='stamp'&&userId) await saveStampRemote(userId,data);
-    else if(type==='bingo')    await saveBingoRemote(data);
-    else if(type==='accounts') await saveAccountsRemote(data);
+    let ok=false;
+    if(type==='payments')      ok=await savePaymentsRemote(data);
+    else if(type==='wants')    ok=await saveWantsRemote(data);
+    else if(type==='stamp'&&userId) ok=await saveStampRemote(userId,data);
+    else if(type==='bingo')    ok=await saveBingoRemote(data);
+    else if(type==='accounts') ok=await saveAccountsRemote(data);
+    if(ok)setSyncPending(pendingType,false);
   })();
 }
