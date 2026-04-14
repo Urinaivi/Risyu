@@ -12,7 +12,10 @@
 html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;align-items:center;font-family:'Noto Sans JP',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
 .phone{width:min(390px,100vw);height:min(844px,100dvh);background:var(--bg);border-radius:clamp(0px,calc((100vw - 390px)*-99),48px);overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 40px 80px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.09)}
 .hdr{padding:max(52px,env(safe-area-inset-top,52px)) 20px 10px;background:var(--bg);flex-shrink:0}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .hdr-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.3px}
+.gas-btn{border:none;background:#e4e4e9;color:var(--text);padding:8px 12px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.gas-btn:active{transform:scale(.96)}
 .tab-bar{display:flex;gap:8px;padding:4px 16px 12px;background:var(--bg);align-items:center;flex-shrink:0}
 .tab-pill{padding:9px 18px;border-radius:22px;font-size:14px;font-weight:600;font-family:'Noto Sans JP',sans-serif;border:none;cursor:pointer;transition:background .2s,color .2s,transform .1s;white-space:nowrap}
 .tab-pill:active{transform:scale(.95)}
@@ -79,6 +82,9 @@ input[type=datetime-local]{color-scheme:light}
 .det-row:last-child{border-bottom:none}
 .det-k{color:var(--sub);flex-shrink:0}
 .det-v{color:var(--text);font-weight:500;text-align:right;word-break:break-all}
+.gas-result{margin:4px 14px 14px;background:var(--card);border-radius:var(--r);padding:12px 14px}
+.gas-result-lbl{font-size:12px;color:var(--sub)}
+.gas-result-val{font-size:24px;font-weight:700;color:var(--text);margin-top:4px}
 @keyframes slideR{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
 @keyframes slideL{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
 .anim-r{animation:slideR .2s ease forwards}
@@ -87,7 +93,12 @@ input[type=datetime-local]{color-scheme:light}
 </head>
 <body>
 <div class="phone">
-  <div class="hdr"><div class="hdr-title">支払い管理</div></div>
+  <div class="hdr">
+    <div class="hdr-top">
+      <div class="hdr-title">支払い管理</div>
+      <button class="gas-btn" onclick="openGasCalc()">⛽ ガソリン代計算</button>
+    </div>
+  </div>
   <div class="tab-bar">
     <button class="tab-pill on" id="tabA" onclick="switchTab('me')"></button>
     <div class="tab-arrow" id="arrow">
@@ -127,6 +138,28 @@ input[type=datetime-local]{color-scheme:light}
       <button class="del-btn" id="delBtn">🗑 この支払いを削除する</button>
     </div>
   </div>
+
+  <div class="overlay" id="gasModal" onclick="bgClose(event,'gasModal')">
+    <div class="sheet">
+      <div class="sh-handle"></div>
+      <div class="sh-hdr"><span class="sh-title">ガソリン代計算</span><button class="x-btn" onclick="closeM('gasModal')">✕</button></div>
+      <div class="f-card">
+        <div class="f-row"><span class="f-lbl">走行距離</span><input class="f-inp" type="number" id="g-distance" placeholder="0" min="0" step="0.1"/><span style="font-size:14px;color:var(--sub);flex-shrink:0">km</span></div>
+        <div class="f-row"><span class="f-lbl">ガソリン価格</span><input class="f-inp" type="number" id="g-price" placeholder="0" min="0" step="0.1"/><span style="font-size:14px;color:var(--sub);flex-shrink:0">円/L</span></div>
+        <div class="f-row"><span class="f-lbl">発生日時</span><input class="f-inp" type="datetime-local" id="g-date"/></div>
+      </div>
+      <div class="f-card">
+        <div class="f-row"><span class="f-lbl">支払者</span><div class="tgl-g"><button class="tgl tgl-accent" id="g-me" onclick="setGasWho('me')"></button><button class="tgl tgl-off" id="g-partner" onclick="setGasWho('partner')"></button></div></div>
+        <div class="f-row"><span class="f-lbl">メモ</span><input class="f-inp" type="text" id="g-memo" placeholder="ガソリン代"/></div>
+      </div>
+      <div class="gas-result">
+        <div class="gas-result-lbl">今回のガソリン代</div>
+        <div class="gas-result-val" id="g-result">¥0</div>
+      </div>
+      <button class="ok-btn" onclick="calcGas()">計算する</button>
+      <button class="ok-btn" id="g-claim-btn" onclick="claimGas()" disabled>請求する（未払いに追加）</button>
+    </div>
+  </div>
 </div>
 
 <script src="auth.js"></script>
@@ -137,7 +170,7 @@ function yen(n){return'¥'+Number(n).toLocaleString()}
 function nowISO(){const d=new Date();d.setSeconds(0,0);return d.toISOString().slice(0,16)}
 function fmtDT(s){if(!s)return'—';const d=new Date(s);if(isNaN(d))return s;const p=n=>String(n).padStart(2,'0');return`${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`}
 
-let payments,tab='me',fWho='me',fStatus='unpaid';
+let payments,tab='me',fWho='me',fStatus='unpaid',gWho='me',gasAmount=0;
 let U,P; // current user / partner
 
 function init(){
@@ -150,6 +183,8 @@ function init(){
   document.getElementById('tabB').textContent=P.icon+' '+P.name;
   document.getElementById('t-me').textContent=U.icon+' '+U.name;
   document.getElementById('t-partner').textContent=P.icon+' '+P.name;
+  document.getElementById('g-me').textContent=U.icon+' '+U.name;
+  document.getElementById('g-partner').textContent=P.icon+' '+P.name;
   // データ
   try{const s=JSON.parse(localStorage.getItem(STORE));payments=(Array.isArray(s)&&s.length)?s:[];}catch{payments=[]}
   // GAS同期してからレンダリング
@@ -160,9 +195,13 @@ function init(){
 }
 
 function autoDelete(){
-  const lim=3*30*24*60*60*1000,now=Date.now(),b=payments.length;
-  payments=payments.filter(p=>now-new Date(p.date).getTime()<lim);
-  if(payments.length!==b)persist();
+  const lim=90*24*60*60*1000,now=Date.now(),b=payments.length;
+  payments=payments.filter(p=>{
+    if(!p.paidDate)return true;
+    const t=new Date(p.paidDate).getTime();
+    if(Number.isNaN(t))return true;
+    return now-t<lim;
+  });
 }
 function persist(){localStorage.setItem(STORE,JSON.stringify(payments));syncOnSave('payments',payments);}
 
@@ -229,6 +268,47 @@ function openDetail(id){
   document.getElementById('detBody').appendChild(btn);
   document.getElementById('delBtn').onclick=()=>{if(!confirm('削除しますか？'))return;payments=payments.filter(x=>x.id!==id);persist();closeM('detModal');render()};
   openM('detModal');
+}
+function openGasCalc(){
+  document.getElementById('g-distance').value='';
+  document.getElementById('g-price').value='';
+  document.getElementById('g-date').value=nowISO();
+  document.getElementById('g-memo').value='ガソリン代';
+  document.getElementById('g-result').textContent=yen(0);
+  document.getElementById('g-claim-btn').disabled=true;
+  gasAmount=0;
+  setGasWho(tab);
+  openM('gasModal');
+}
+
+function setGasWho(w){
+  gWho=w;
+  document.getElementById('g-me').className='tgl '+(w==='me'?'tgl-accent':'tgl-off');
+  document.getElementById('g-partner').className='tgl '+(w==='partner'?'tgl-accent':'tgl-off');
+}
+
+function calcGas(){
+  const distance=parseFloat(document.getElementById('g-distance').value);
+  const price=parseFloat(document.getElementById('g-price').value);
+  if(Number.isNaN(distance)||distance<0||Number.isNaN(price)||price<0){
+    alert('走行距離とガソリン価格を入力してください');
+    return;
+  }
+  const usage=distance/15;
+  gasAmount=Math.round(usage*price);
+  document.getElementById('g-result').textContent=yen(gasAmount);
+  document.getElementById('g-claim-btn').disabled=gasAmount<=0;
+}
+
+function claimGas(){
+  if(gasAmount<=0){alert('先に計算してください');return}
+  const date=document.getElementById('g-date').value||nowISO();
+  const memo=(document.getElementById('g-memo').value||'ガソリン代').trim();
+  payments.push({id:uid(),date,amount:gasAmount,memo,who:whoId(gWho),status:'unpaid',paidDate:null,createdAt:new Date().toISOString()});
+  payments.sort((a,b)=>b.date.localeCompare(a.date));
+  persist();
+  closeM('gasModal');
+  render();
 }
 
 init();
