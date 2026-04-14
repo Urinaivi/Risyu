@@ -30,19 +30,24 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .season-label{font-size:16px;font-weight:700;color:var(--text)}
 .season-period{font-size:11px;color:var(--sub);margin-top:2px}
 .expired-tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:#f0f0f5;color:var(--muted);margin-top:4px}
-.bingo-wrap{background:var(--card);border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:0 2px 14px rgba(0,0,0,.07)}
+.bingo-wrap{background:var(--card);border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:0 2px 14px rgba(0,0,0,.07);position:relative;overflow:hidden}
+.bingo-wrap.is-bingo{box-shadow:0 8px 24px rgba(245,158,11,.32),0 0 0 2px rgba(245,158,11,.22);animation:bingoGlow 1.6s ease-in-out infinite}
+.bingo-wrap.is-bingo::after{content:'✨';position:absolute;right:12px;top:10px;font-size:18px;animation:sparkle 1.8s ease-in-out infinite}
 .bingo-title{font-size:30px;font-weight:900;letter-spacing:.12em;text-align:center;margin-bottom:12px;color:var(--text)}
 .bingo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;touch-action:pan-y}
 .bingo-cell{aspect-ratio:1;border-radius:7px;background:#f0f0f5;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:500;color:var(--sub);cursor:pointer;text-align:center;padding:3px;line-height:1.25;transition:all .15s;overflow:hidden;word-break:break-all;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .bingo-cell:active{transform:scale(.9)}
 .bingo-cell.empty-cell{color:var(--muted);font-size:18px}
 .bingo-cell.cleared{background:linear-gradient(135deg,var(--accent) 0%,#a78bfa 100%);color:#fff;font-weight:600}
-.bingo-cell.bingo-line{background:linear-gradient(135deg,var(--gold) 0%,var(--orange) 100%);color:#fff;font-weight:700}
+.bingo-cell.bingo-line{background:linear-gradient(135deg,var(--gold) 0%,var(--orange) 100%);color:#fff;font-weight:700;box-shadow:0 0 0 1px rgba(255,255,255,.32) inset,0 4px 12px rgba(245,158,11,.4);animation:bingoCellPop .7s ease}
 .bingo-cell.edit-hover{background:#e8e5ff;border:1.5px dashed var(--accent)}
 .bingo-count{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px}
 .bingo-chip{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:20px;background:linear-gradient(135deg,var(--gold),var(--orange));color:#fff;font-size:12px;font-weight:700}
 .clear-count{font-size:12px;color:var(--sub)}
-.bingo-banner{background:linear-gradient(135deg,var(--gold),var(--orange));border-radius:12px;padding:14px;margin-bottom:12px;text-align:center;color:#fff}
+.bingo-banner{background:linear-gradient(135deg,var(--gold),var(--orange));border-radius:12px;padding:14px;margin-bottom:12px;text-align:center;color:#fff;position:relative;overflow:hidden}
+.bingo-banner::before,.bingo-banner::after{position:absolute;font-size:16px;opacity:.7}
+.bingo-banner::before{content:'🎀';left:12px;top:8px;animation:floaty 2s ease-in-out infinite}
+.bingo-banner::after{content:'💖';right:12px;bottom:6px;animation:floaty 2.4s ease-in-out infinite}
 .bingo-banner-title{font-size:16px;font-weight:700;margin-bottom:3px}
 .bingo-banner-sub{font-size:12px;opacity:.9}
 .reward-card{background:var(--card);border-radius:var(--r);padding:14px 16px;margin-bottom:10px}
@@ -50,6 +55,13 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .reward-label{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.05em}
 .reward-edit-btn{font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;font-weight:600;font-family:'Noto Sans JP',sans-serif}
 .reward-text{font-size:15px;color:var(--text);line-height:1.6}
+.reward-list{display:grid;gap:8px}
+.reward-item{display:flex;align-items:flex-start;gap:8px;background:#faf7ff;border:1px solid #efe8ff;border-radius:10px;padding:8px 10px}
+.reward-item.hit{background:#fff2d8;border-color:#ffd181}
+.reward-num{min-width:54px;font-size:11px;font-weight:700;color:#8b5cf6;background:#ede9fe;border-radius:999px;padding:3px 8px;text-align:center}
+.reward-item.hit .reward-num{background:linear-gradient(135deg,var(--gold),var(--orange));color:#fff}
+.reward-desc{font-size:13px;color:var(--text);line-height:1.45;word-break:break-word}
+.reward-current{margin-top:10px;padding:9px 11px;border-radius:10px;background:#fff6db;color:#7a4a00;font-size:13px;font-weight:600}
 .nav{height:calc(var(--nav) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);background:rgba(250,250,250,.96);border-top:.5px solid var(--border);display:flex;align-items:flex-start;flex-shrink:0;backdrop-filter:blur(20px);z-index:30}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:10px 0 6px;border:none;background:none;-webkit-tap-highlight-color:transparent;transition:transform .1s}
 .nav-item:active{transform:scale(.88)}
@@ -87,6 +99,10 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .fade-in{animation:fadeIn .2s ease}
 @keyframes bingoPop{0%{transform:scale(1)}40%{transform:scale(1.18)}70%{transform:scale(.94)}100%{transform:scale(1)}}
 .bingo-pop{animation:bingoPop .4s ease}
+@keyframes bingoGlow{0%,100%{box-shadow:0 8px 24px rgba(245,158,11,.3),0 0 0 2px rgba(245,158,11,.2)}50%{box-shadow:0 12px 28px rgba(245,158,11,.45),0 0 0 3px rgba(245,158,11,.3)}}
+@keyframes sparkle{0%,100%{transform:translateY(0) rotate(0deg);opacity:.75}50%{transform:translateY(-5px) rotate(12deg);opacity:1}}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes bingoCellPop{0%{transform:scale(.9)}60%{transform:scale(1.05)}100%{transform:scale(1)}}
 </style>
 </head>
 <body>
@@ -123,7 +139,7 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
     <div class="sheet">
       <div class="sh-handle"></div>
       <div class="sh-hdr"><span class="sh-title">ビンゴ報酬を編集</span><button class="x-btn" onclick="closeM('rewardModal')">✕</button></div>
-      <div class="f-card"><div class="f-row"><span class="f-lbl">報酬内容</span><textarea class="f-inp" id="rewardInput" rows="3" placeholder="例：好きなレストランへのディナー 🍽️"></textarea></div></div>
+      <div id="rewardFormList"></div>
       <button class="ok-btn" onclick="saveReward()">保存する</button>
     </div>
   </div>
@@ -131,10 +147,11 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 
 <script src="auth.js"></script>
 <script>
-const BINGO_STORE='bingo_v1',WANTS_STORE='wants_v1',REWARD_STORE='bingo_reward_v1';
+const BINGO_STORE='bingo_v1',WANTS_STORE='wants_v1',REWARD_STORE='bingo_reward_by_count_v1';
 const SEASON_DEFS=[{key:'spring',emoji:'🌸',label:'春',start:'03-01',end:'05-31'},{key:'summer',emoji:'🌻',label:'夏',start:'06-01',end:'08-31'},{key:'autumn',emoji:'🍂',label:'秋',start:'09-01',end:'11-30'},{key:'winter',emoji:'❄️',label:'冬',start:'12-01',end:'02-28'}];
 const BINGO_LINES=[[0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24],[0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24],[0,6,12,18,24],[4,8,12,16,20]];
-let bingoData,wantsItems,reward,seasonIdx=0,editMode=false,pickerCellIdx=-1,U,P;
+let bingoData,wantsItems,rewardMap,seasonIdx=0,editMode=false,pickerCellIdx=-1,U,P;
+
 
 function init(){
   if(!requireLogin())return;
@@ -143,16 +160,19 @@ function init(){
   document.getElementById('nav').innerHTML=navHTML('wants');
   syncOnLoad(['bingo','wants','accounts']).then(()=>{
     bingoData=loadBingo();wantsItems=loadWants();
-    reward=localStorage.getItem(REWARD_STORE)||'好きなレストランへのディナー 🍽️';
+    rewardMap=loadRewardMap();
     ensureSeasons();seasonIdx=currentSeasonIdx();render();
   });
 }
 
 function loadBingo(){try{const d=JSON.parse(localStorage.getItem(BINGO_STORE));if(d&&Array.isArray(d.seasons))return d}catch{}return{seasons:[]}}
 function loadWants(){try{const d=JSON.parse(localStorage.getItem(WANTS_STORE));if(Array.isArray(d))return d}catch{}return[]}
+function defaultRewardMap(){const map={};for(let i=1;i<=12;i++)map[i]=`${i}ビンゴ達成のごほうびを設定してください 🎁`;return map}
+function loadRewardMap(){try{const d=JSON.parse(localStorage.getItem(REWARD_STORE));if(d&&typeof d==='object'){return{...defaultRewardMap(),...d}}}catch{}return defaultRewardMap()}
 function persist(){localStorage.setItem(BINGO_STORE,JSON.stringify(bingoData));syncOnSave('bingo',bingoData);}
 function accountName(id){return id===U.id?U.name:P.name}
 function accountIcon(id){return id===U.id?U.icon:P.icon}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
 function buildSeasonDates(year,def){const ey=def.key==='winter'?year+1:year;const ed=def.key==='winter'?leapEnd(ey):def.end;return{start:`${year}-${def.start}`,end:`${ey}-${ed}`}}
 function leapEnd(year){return new Date(year,2,0).getDate()===29?'02-29':'02-28'}
@@ -192,9 +212,14 @@ function render(){
     const label=cell?(cell.title.length>10?cell.title.slice(0,9)+'…':cell.title):(editMode?'＋':'');
     return`<div class="${cls}" onclick="cellTap(${i})">${label}</div>`;
   }).join('');
-  const bingoHTML=bingoCount>0?`<div class="bingo-banner bingo-pop"><div class="bingo-banner-title">🎉 ${bingoCount}ライン ビンゴ達成！</div><div class="bingo-banner-sub">報酬をゲットしよう！</div></div>`:'';
+  const bingoHTML=bingoCount>0?`<div class="bingo-banner bingo-pop"><div class="bingo-banner-title">🎉 ${bingoCount}ライン ビンゴ達成！</div><div class="bingo-banner-sub">かわいくキラキラ達成中 ✨</div></div>`:'';
+  const rewardListHTML=Array.from({length:12},(_,n)=>n+1).map(cnt=>{
+    const hit=bingoCount>=cnt;
+    return `<div class="reward-item${hit?' hit':''}"><span class="reward-num">${cnt}ビンゴ</span><span class="reward-desc">${esc(rewardMap[cnt])}</span></div>`;
+  }).join('');
+  const activeReward=bingoCount>0?`<div class="reward-current">現在の達成報酬：${esc(rewardMap[Math.min(12,bingoCount)])}</div>`:'';
   const tag=expired?'<div class="expired-tag">終了済み</div>':'';
-  el.innerHTML=`<div class="season-nav"><button class="nav-arrow" onclick="moveSeason(-1)" ${seasonIdx===0?'disabled':''}>‹</button><div class="season-label-wrap"><div class="season-label">${season.label}</div><div class="season-period">${fmtDate(season.start)} 〜 ${fmtDate(season.end)}</div>${tag}</div><button class="nav-arrow" onclick="moveSeason(1)" ${seasonIdx===bingoData.seasons.length-1?'disabled':''}>›</button></div><div class="bingo-wrap fade-in"><div class="bingo-title">BINGO</div><div class="bingo-grid">${gridHTML}</div><div class="bingo-count">${bingoCount>0?`<div class="bingo-chip">🎯 ${bingoCount} BINGO!</div>`:''}<div class="clear-count">${cleared} / 25 マスクリア</div></div></div>${bingoHTML}<div class="reward-card"><div class="reward-header"><span class="reward-label">ビンゴ報酬について</span><button class="reward-edit-btn" onclick="openRewardModal()">✏️ 編集</button></div><div class="reward-text">${reward}</div></div><div style="height:6px"></div>`;
+  el.innerHTML=`<div class="season-nav"><button class="nav-arrow" onclick="moveSeason(-1)" ${seasonIdx===0?'disabled':''}>‹</button><div class="season-label-wrap"><div class="season-label">${season.label}</div><div class="season-period">${fmtDate(season.start)} 〜 ${fmtDate(season.end)}</div>${tag}</div><button class="nav-arrow" onclick="moveSeason(1)" ${seasonIdx===bingoData.seasons.length-1?'disabled':''}>›</button></div><div class="bingo-wrap fade-in ${bingoCount>0?'is-bingo':''}"><div class="bingo-title">BINGO</div><div class="bingo-grid">${gridHTML}</div><div class="bingo-count">${bingoCount>0?`<div class="bingo-chip">🎯 ${bingoCount} BINGO!</div>`:''}<div class="clear-count">${cleared} / 25 マスクリア</div></div></div>${bingoHTML}<div class="reward-card"><div class="reward-header"><span class="reward-label">ビンゴ報酬（1〜12ライン）</span><button class="reward-edit-btn" onclick="openRewardModal()">✏️ 編集</button></div><div class="reward-list">${rewardListHTML}</div>${activeReward}</div><div style="height:6px"></div>`;
 }
 
 function moveSeason(dir){seasonIdx=Math.max(0,Math.min(bingoData.seasons.length-1,seasonIdx+dir));render()}
@@ -223,8 +248,22 @@ function showCellDetail(cell,idx){
   openM('cellViewModal');
 }
 
-function openRewardModal(){document.getElementById('rewardInput').value=reward;openM('rewardModal')}
-function saveReward(){reward=document.getElementById('rewardInput').value.trim()||'報酬未設定';localStorage.setItem(REWARD_STORE,reward);closeM('rewardModal');render()}
+function openRewardModal(){
+  const formHTML=Array.from({length:12},(_,n)=>n+1).map(cnt=>`<div class="f-card"><div class="f-row"><span class="f-lbl">${cnt}ビンゴ</span><textarea class="f-inp reward-input" data-count="${cnt}" rows="2" placeholder="${cnt}ビンゴ時の報酬">${esc(rewardMap[cnt])}</textarea></div></div>`).join('');
+  document.getElementById('rewardFormList').innerHTML=formHTML;
+  openM('rewardModal');
+}
+function saveReward(){
+  const next={...defaultRewardMap()};
+  document.querySelectorAll('.reward-input').forEach(el=>{
+    const c=Number(el.dataset.count);
+    next[c]=el.value.trim()||`${c}ビンゴ達成のごほうびを設定してください 🎁`;
+  });
+  rewardMap=next;
+  localStorage.setItem(REWARD_STORE,JSON.stringify(rewardMap));
+  closeM('rewardModal');
+  render();
+}
 
 function openM(id){document.getElementById(id).classList.add('open')}
 function closeM(id){document.getElementById(id).classList.remove('open')}
