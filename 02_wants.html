@@ -224,7 +224,7 @@ function sampleItems(){return[
 ]}
 
 function accountName(id){return id===U.id?U.name:P.name}
-function accountIcon(id){return id===U.id?U.icon:P.icon}
+function accountIcon(id,size=16){return iconHTML(id===U.id?U.icon:P.icon,size)}
 
 function persist(){localStorage.setItem(STORE,JSON.stringify(items));syncOnSave('wants',items);}
 function autoDelete(){const y3=3*365*24*60*60*1000,now=Date.now(),b=items.length;items=items.filter(w=>{if(w.status!=='done'||!w.doneDate)return true;return now-new Date(w.doneDate).getTime()<y3});if(items.length!==b)persist()}
@@ -247,7 +247,7 @@ function render(){
   const total=items.length,doneAll=items.filter(w=>w.status==='done').length;
   const aCount=items.filter(w=>w.registrar===U.id).length,bCount=items.filter(w=>w.registrar===P.id).length;
   const row=w=>`<div class="c-row" onclick="openDetail('${w.id}')"><div class="c-main"><div class="c-title">${w.title}</div><div class="c-sub">登録: ${fmtDay(w.regDate)} · ${accountIcon(w.registrar)} ${accountName(w.registrar)}${w.period?' · '+w.period:''}</div></div><div class="c-right"><span class="badge ${w.status==='done'?'b-green':'b-orange'}">${w.status==='done'?'実行済み':'未実行'}</span></div></div>`;
-  el.innerHTML=`<div class="chart-row"><div class="chart-box"><div class="chart-lbl">実行率</div><div class="pie-wrap"><canvas id="pie1"></canvas><div class="pie-center"><div class="pie-num">${total?Math.round(doneAll/total*100):0}</div><div class="pie-unit">%</div></div></div><div class="chart-sub">${doneAll} / ${total} 件</div></div><div class="chart-box"><div class="chart-lbl">登録数の割合</div><div class="pie-wrap"><canvas id="pie2"></canvas><div class="pie-center"><div class="pie-num" style="font-size:11px;color:var(--sub)">${U.icon}:${aCount}<br>${P.icon}:${bCount}</div></div></div><div class="chart-sub">全 ${total} 件</div></div></div><div class="sec-lbl">未実行 (${pending.length})</div><div class="c-list">${pending.length?pending.map(row).join(''):'<div class="empty-row">データなし</div>'}</div><div class="sec-lbl">実行済み (${done.length})</div><div class="c-list">${done.length?done.map(row).join(''):'<div class="empty-row">データなし</div>'}</div><div style="height:6px"></div>`;
+  el.innerHTML=`<div class="chart-row"><div class="chart-box"><div class="chart-lbl">実行率</div><div class="pie-wrap"><canvas id="pie1"></canvas><div class="pie-center"><div class="pie-num">${total?Math.round(doneAll/total*100):0}</div><div class="pie-unit">%</div></div></div><div class="chart-sub">${doneAll} / ${total} 件</div></div><div class="chart-box"><div class="chart-lbl">登録数の割合</div><div class="pie-wrap"><canvas id="pie2"></canvas><div class="pie-center"><div class="pie-num" style="font-size:11px;color:var(--sub)">${iconHTML(U.icon,12)}:${aCount}<br>${iconHTML(P.icon,12)}:${bCount}</div></div></div><div class="chart-sub">全 ${total} 件</div></div></div><div class="sec-lbl">未実行 (${pending.length})</div><div class="c-list">${pending.length?pending.map(row).join(''):'<div class="empty-row">データなし</div>'}</div><div class="sec-lbl">実行済み (${done.length})</div><div class="c-list">${done.length?done.map(row).join(''):'<div class="empty-row">データなし</div>'}</div><div style="height:6px"></div>`;
   drawPie('pie1',[doneAll,total-doneAll],['#34c759','#e5e5ea']);
   drawPie('pie2',[aCount,bCount],[U.theme,P.theme]);
 }
@@ -268,7 +268,7 @@ function openAdd(){
   document.getElementById('f-url').value='';
   document.getElementById('f-memo').value='';
   document.getElementById('f-donedate').value=todayStr();
-  document.getElementById('addRegLabel').textContent=U.icon+' '+U.name;
+  document.getElementById('addRegLabel').innerHTML=iconHTML(U.icon,14)+' '+U.name;
   setAddStatus('pending');openM('addModal');
 }
 function setAddStatus(s){
@@ -348,8 +348,8 @@ function applyFilterUI(){
   // 登録者フィルターをユーザー名で動的生成
   document.getElementById('fil-reg-btns').innerHTML=`
     <button class="tgl ${fr==='all'?'tgl-accent':'tgl-off'}" onclick="setRegFilter('all')">全て</button>
-    <button class="tgl ${fr===U.id?'tgl-accent':'tgl-off'}" onclick="setRegFilter('${U.id}')">${U.icon} ${U.name}</button>
-    <button class="tgl ${fr===P.id?'tgl-accent':'tgl-off'}" onclick="setRegFilter('${P.id}')">${P.icon} ${P.name}</button>`;
+    <button class="tgl ${fr===U.id?'tgl-accent':'tgl-off'}" onclick="setRegFilter('${U.id}')">${iconHTML(U.icon,14)} ${U.name}</button>
+    <button class="tgl ${fr===P.id?'tgl-accent':'tgl-off'}" onclick="setRegFilter('${P.id}')">${iconHTML(P.icon,14)} ${P.name}</button>`;
   document.getElementById('sort-reg').className='tgl '+(sk==='reg'?'tgl-accent':'tgl-off');
   document.getElementById('sort-done').className='tgl '+(sk==='done'?'tgl-accent':'tgl-off');
 }

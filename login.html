@@ -113,7 +113,7 @@ function init() {
   const cards = document.getElementById('accCards');
   cards.innerHTML = accounts.map(a => `
     <div class="acc-card" id="acc-${a.id}" onclick="selectAcc('${a.id}')">
-      <div class="acc-icon">${a.icon}</div>
+      <div class="acc-icon">${iconHTML(a.icon,32)}</div>
       <div class="acc-name">${a.name}</div>
       <div class="acc-email">${a.email}</div>
     </div>`).join('');

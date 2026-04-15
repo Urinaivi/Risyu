@@ -179,12 +179,12 @@ function init(){
   applyTheme(U.theme);
   document.getElementById('nav').innerHTML=navHTML('pay');
   // タブラベル
-  document.getElementById('tabA').textContent=U.icon+' '+U.name;
-  document.getElementById('tabB').textContent=P.icon+' '+P.name;
-  document.getElementById('t-me').textContent=U.icon+' '+U.name;
-  document.getElementById('t-partner').textContent=P.icon+' '+P.name;
-  document.getElementById('g-me').textContent=U.icon+' '+U.name;
-  document.getElementById('g-partner').textContent=P.icon+' '+P.name;
+  document.getElementById('tabA').innerHTML=iconHTML(U.icon)+' '+U.name;
+  document.getElementById('tabB').innerHTML=iconHTML(P.icon)+' '+P.name;
+  document.getElementById('t-me').innerHTML=iconHTML(U.icon)+' '+U.name;
+  document.getElementById('t-partner').innerHTML=iconHTML(P.icon)+' '+P.name;
+  document.getElementById('g-me').innerHTML=iconHTML(U.icon)+' '+U.name;
+  document.getElementById('g-partner').innerHTML=iconHTML(P.icon)+' '+P.name;
   // データ
   try{const s=JSON.parse(localStorage.getItem(STORE));payments=(Array.isArray(s)&&s.length)?s:[];}catch{payments=[]}
   // GAS同期してからレンダリング

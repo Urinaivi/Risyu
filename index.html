@@ -19,6 +19,7 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .user-chip{display:flex;align-items:center;gap:6px;background:var(--card);border-radius:20px;padding:6px 12px 6px 6px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.06);transition:background .15s}
 .user-chip:active{background:#e5e5ea}
 .user-chip-icon{font-size:20px}
+.user-chip-icon-img{width:20px;height:20px;border-radius:50%;object-fit:cover;display:block}
 .user-chip-name{font-size:12px;font-weight:600;color:var(--text)}
 .refresh-btn{width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--sub);box-shadow:0 1px 4px rgba(0,0,0,.06);transition:transform .3s,background .15s;flex-shrink:0}
 .refresh-btn:active{background:#e5e5ea}
@@ -110,7 +111,7 @@ function init(){
   if(!requireLogin())return;
   const u=currentUser();
   applyTheme(u.theme);
-  document.getElementById('userIcon').textContent=u.icon;
+  document.getElementById('userIcon').innerHTML=iconHTML(u.icon,20);
   document.getElementById('userName').textContent=u.name;
   document.getElementById('nav').innerHTML=navHTML('home');
   renderHeader();render();
@@ -154,8 +155,8 @@ function render(){
       <div class="hero-amount">${yen(diffAbs)}</div>
       <div class="hero-desc">${diffDesc}</div>
       <div class="hero-sub-row">
-        <div class="hero-sub-item"><div class="hero-sub-label">${u.icon} ${u.name}の未払い</div><div class="hero-sub-val">${yen(unMe)}</div></div>
-        <div class="hero-sub-item"><div class="hero-sub-label">${p.icon} ${p.name}の未払い</div><div class="hero-sub-val">${yen(unPt)}</div></div>
+        <div class="hero-sub-item"><div class="hero-sub-label">${iconHTML(u.icon,14)} ${u.name}の未払い</div><div class="hero-sub-val">${yen(unMe)}</div></div>
+        <div class="hero-sub-item"><div class="hero-sub-label">${iconHTML(p.icon,14)} ${p.name}の未払い</div><div class="hero-sub-val">${yen(unPt)}</div></div>
       </div>
     </div>
     <div class="grid2 section-anim">

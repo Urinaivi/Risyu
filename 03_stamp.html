@@ -136,7 +136,7 @@ function init(){
   applyTheme(U.theme);
   STORE='stamp_v1_'+U.id;              // ← ユーザー固有キー
   REWARD_STORE='stamp_reward_v1_'+U.id;
-  document.getElementById('hdrUser').textContent=U.icon+' '+U.name;
+  document.getElementById('hdrUser').innerHTML=iconHTML(U.icon)+' '+U.name;
   document.getElementById('nav').innerHTML=navHTML('stamp');
   syncOnLoad(['stamp','accounts'],U.id).then(()=>{
     data=loadData();

@@ -45,6 +45,27 @@ function applyTheme(color) {
 }
 
 /* ────────────────────────────────────────────────────────────
+   アイコン表示（絵文字 / 画像URL）
+──────────────────────────────────────────────────────────── */
+function escHtml(s){
+  return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function isImageIcon(icon){
+  const v=String(icon||'').trim();
+  if(!v)return false;
+  return /^https?:\/\//i.test(v)||/^data:image\//i.test(v)||/\.(png|jpe?g|gif|webp|svg|avif)(\?.*)?$/i.test(v);
+}
+function iconHTML(icon,size=20){
+  const s=Math.max(12,Number(size)||20);
+  if(isImageIcon(icon)){
+    const src=escHtml(icon);
+    const fallback='🙂';
+    return `<span style="display:inline-flex;align-items:center;justify-content:center;width:${s}px;height:${s}px;vertical-align:middle"><img src="${src}" alt="icon" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;display:block" onerror="this.style.display='none';this.parentElement.textContent='${fallback}'"></span>`;
+  }
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:${s}px;min-height:${s}px;line-height:1;vertical-align:middle;font-size:${Math.round(s*0.9)}px">${escHtml(icon||'🙂')}</span>`;
+}
+
+/* ────────────────────────────────────────────────────────────
    多分ビンゴのやつ
 ──────────────────────────────────────────────────────────── */
 function getSyncPendingMap(){
@@ -124,8 +145,21 @@ async function saveBingoRemote(data){return gasSet('bingo',[['data'],[JSON.strin
 /* ── アカウント情報 ── */
 async function syncAccountsRemote(){
   const remote=await gasGet('accounts',rows=>{if(rows.length<2)return null;try{return JSON.parse(rows[1][0]);}catch{return null;}});
-  if(remote&&Array.isArray(remote)){saveAccounts(remote);return remote;}
   const local=getAccounts();
+  
+  if(remote&&Array.isArray(remote)){
+    // ローカルのアイコンとテーマをGASから取得したデータに保護
+    remote.forEach(r=>{
+      const l=local.find(acc=>acc.id===r.id);
+      if(l){
+        r.icon=l.icon;
+        r.theme=l.theme;
+      }
+    });
+    saveAccounts(remote);
+    return remote;
+  }
+  
   await gasSet('accounts',[['data'],[JSON.stringify(local)]]);
   return local;
 }
