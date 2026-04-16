@@ -478,6 +478,11 @@ function renderLinks(urls){
   return (urls||[]).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u)}</a>`).join('<br>')||'—';
 }
 
+function renderHearts(num){
+  const n=Number(num)||0;
+  return '💗'.repeat(n)+'🤍'.repeat(5-n);
+}
+
 function openDetail(id){
   const w=items.find(x=>x.id===id);if(!w)return;
   editingId=id;
@@ -495,7 +500,7 @@ function openDetail(id){
     <div class="det-row"><span class="det-k">URL</span><span class="det-v">${renderLinks(w.urls)}</span></div>
     ${img}
     <div class="det-row"><span class="det-k">タグ</span><span class="det-v">${tags}</span></div>
-    <div class="det-row"><span class="det-k">やりたい度</span><span class="det-v">${esc(U.name)}:${w.meter?.[U.id]||3}/5<br>${esc(P.name)}:${w.meter?.[P.id]||3}/5</span></div>
+    <div class="det-row"><span class="det-k">やりたい度</span><span class="det-v">${esc(U.name)}:${renderHearts(w.meter?.[U.id]||3)}<br>${esc(P.name)}:${renderHearts(w.meter?.[P.id]||3)}</span></div>
     <div class="det-row"><span class="det-k">メモ</span><span class="det-v">${esc(w.memo)||'—'}</span></div>`;
   const toggleBtn=document.getElementById('toggleBtn');
   if(w.status==='done'){
