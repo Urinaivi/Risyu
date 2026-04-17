@@ -107,6 +107,11 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
 .meter-row{display:flex;align-items:center;gap:8px}
 .meter-row span{font-size:12px;color:var(--sub);min-width:40px}
 .meter-row input{flex:1}
+.meter-row input[type=range]{-webkit-appearance:none;appearance:none;height:10px;background:#ffd9e8;border-radius:999px;outline:none}
+.meter-row input[type=range]::-webkit-slider-runnable-track{height:10px;border-radius:999px;background:#ff9ec8}
+.meter-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:28px;height:28px;border-radius:50%;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext x='50%25' y='60%25' font-size='18' text-anchor='middle' dominant-baseline='middle'%3E%F0%9F%92%97%3C/text%3E%3C/svg%3E") center/contain no-repeat;background-color:#ff7aa0;box-shadow:0 0 0 2px #fff;cursor:pointer;margin-top:-9px}
+.meter-row input[type=range]::-moz-range-track{height:10px;border-radius:999px;background:#ff9ec8}
+.meter-row input[type=range]::-moz-range-thumb{width:28px;height:28px;border:none;border-radius:50%;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext x='50%25' y='60%25' font-size='18' text-anchor='middle' dominant-baseline='middle'%3E%F0%9F%92%97%3C/text%3E%3C/svg%3E") center/contain no-repeat;background-color:#ff7aa0;box-shadow:0 0 0 2px #fff;cursor:pointer}
 .preview-img{width:100%;max-width:160px;border-radius:10px;border:1px solid #ececf4;display:none;margin-left:auto}
 
 /* ── フィルタータグ選択チップ ── */
@@ -170,7 +175,7 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
         <div class="f-row"><span class="f-lbl">登録者</span><span id="addRegLabel" style="font-size:14px;color:var(--sub);margin-left:auto"></span></div>
         <div class="f-row"><span class="f-lbl">ステータス</span><div class="tgl-g"><button class="tgl tgl-orange" id="t-pending" onclick="setAddStatus('pending')">未実行</button><button class="tgl tgl-off" id="t-done" onclick="setAddStatus('done')">実行済み</button></div></div>
         <div class="f-row" id="doneDateRow" style="display:none"><span class="f-lbl">実行日</span><input class="f-inp" type="date" id="f-donedate"/></div>
-        <div class="f-row"><span class="f-lbl">やりたい度</span><div class="meter-wrap"><div class="meter-row"><span id="meter-a-name"></span><input type="range" id="f-meter-a" min="1" max="5" value="3"/></div><div class="meter-row"><span id="meter-b-name"></span><input type="range" id="f-meter-b" min="1" max="5" value="3"/></div></div></div>
+        <div class="f-row"><span class="f-lbl">やりたい度</span><div class="meter-wrap"><div class="meter-row"><span id="meter-a-name"></span><input type="range" id="f-meter-a" min="1" max="5" value="3"/></div><div class="meter-row"><span id="meter-b-name"></span><input type="range" id="f-meter-b" min="1" max="5" value="3" disabled/></div></div></div>
       </div>
       <button class="ok-btn" onclick="submitAdd()">追加する</button>
     </div>
@@ -203,7 +208,7 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
         <div class="f-row" style="align-items:flex-start;padding-top:14px"><span class="f-lbl" style="padding-top:2px">タグ</span><div class="plus-list" id="e-tag-list"></div></div>
         <div class="f-row" style="align-items:flex-start;padding-top:14px"><span class="f-lbl" style="padding-top:2px">メモ</span><textarea class="f-inp left" id="e-memo" rows="2"></textarea></div>
         <div class="f-row" id="e-doneDateRow" style="display:none"><span class="f-lbl">実行日</span><input class="f-inp" type="date" id="e-donedate"/></div>
-        <div class="f-row"><span class="f-lbl">やりたい度</span><div class="meter-wrap"><div class="meter-row"><span id="e-meter-a-name"></span><input type="range" id="e-meter-a" min="1" max="5" value="3"/></div><div class="meter-row"><span id="e-meter-b-name"></span><input type="range" id="e-meter-b" min="1" max="5" value="3"/></div></div></div>
+        <div class="f-row"><span class="f-lbl">やりたい度</span><div class="meter-wrap"><div class="meter-row"><span id="e-meter-a-name"></span><input type="range" id="e-meter-a" min="1" max="5" value="3"/></div><div class="meter-row"><span id="e-meter-b-name"></span><input type="range" id="e-meter-b" min="1" max="5" value="3" disabled/></div></div></div>
       </div>
       <button class="ok-btn" onclick="submitEdit()">保存する</button>
     </div>
@@ -254,6 +259,7 @@ const TAG_STORE='wants_tags_v1';
 const defaultTags=['ドライブ','町','☆','☆☆','☆☆☆'];
 let items,U,P;
 let fStatus='pending',filterStatus='all',filterMap='all',filterReg='all',filterTags=[],sortKey='reg',editingId=null;
+let fMeterTouched=false,eMeterTouched=false;
 
 function init(){
   if(!requireLogin())return;
@@ -297,7 +303,7 @@ function migrateLegacy(){
     mapUrl:w.mapUrl||'',
     imageUrl:w.imageUrl||'',
     tags:Array.isArray(w.tags)?w.tags:[],
-    meter:w.meter&&typeof w.meter==='object'?w.meter:{[U.id]:3,[P.id]:3}
+    meter:w.meter&&typeof w.meter==='object'?{[U.id]:w.meter?.[U.id]??null,[P.id]:w.meter?.[P.id]??null}:{[U.id]:null,[P.id]:null}
   }));
 }
 
@@ -447,8 +453,13 @@ function openAdd(){
   previewImage('f-image','f-image-preview');
   document.getElementById('f-memo').value='';
   document.getElementById('f-donedate').value=todayStr();
-  document.getElementById('f-meter-a').value=3;
-  document.getElementById('f-meter-b').value=3;
+  const fMeterA=document.getElementById('f-meter-a');
+  fMeterA.value=3;
+  fMeterTouched=false;
+  fMeterA.oninput=()=>{fMeterTouched=true};
+  const fMeterB=document.getElementById('f-meter-b');
+  fMeterB.value=3;
+  fMeterB.disabled=true;
   clearPlusList('f-url-list');addPlusInput('f-url-list','url');
   clearPlusList('f-tag-list');addTagInput('f-tag-list');
   document.getElementById('f-date-row').classList.remove('hidden');
@@ -484,7 +495,7 @@ function submitAdd(){
     urls,mapUrl:document.getElementById('f-map').value.trim(),imageUrl:document.getElementById('f-image').value.trim(),
     memo:document.getElementById('f-memo').value.trim(),registrar:U.id,status:fStatus,
     doneDate:fStatus==='done'?(document.getElementById('f-donedate').value||todayStr()):null,
-    tags,meter:{[U.id]:Number(document.getElementById('f-meter-a').value),[P.id]:Number(document.getElementById('f-meter-b').value)}
+    tags,meter:{[U.id]:fMeterTouched?Number(document.getElementById('f-meter-a').value):null,[P.id]:null}
   });
   persist();closeM('addModal');render();
 }
@@ -494,7 +505,9 @@ function renderLinks(urls){
 }
 
 function renderHearts(num){
-  const n=Number(num)||0;
+  if(num===null||num===undefined||num==='')return '—';
+  const n=Number(num);
+  if(Number.isNaN(n)||n<1||n>5)return '—';
   return '💗'.repeat(n)+'🤍'.repeat(5-n);
 }
 
@@ -515,7 +528,7 @@ function openDetail(id){
     <div class="det-row"><span class="det-k">URL</span><span class="det-v">${renderLinks(w.urls)}</span></div>
     ${img}
     <div class="det-row"><span class="det-k">タグ</span><span class="det-v">${tags}</span></div>
-    <div class="det-row"><span class="det-k">やりたい度</span><span class="det-v">${esc(U.name)}:${renderHearts(w.meter?.[U.id]||3)}<br>${esc(P.name)}:${renderHearts(w.meter?.[P.id]||3)}</span></div>
+    <div class="det-row"><span class="det-k">やりたい度</span><span class="det-v">${esc(U.name)}:${renderHearts(w.meter?.[U.id] ?? null)}<br>${esc(P.name)}:${renderHearts(w.meter?.[P.id] ?? null)}</span></div>
     <div class="det-row"><span class="det-k">メモ</span><span class="det-v">${esc(w.memo)||'—'}</span></div>`;
   const toggleBtn=document.getElementById('toggleBtn');
   if(w.status==='done'){
@@ -545,8 +558,13 @@ function openEdit(){
   document.getElementById('e-memo').value=w.memo||'';
   document.getElementById('e-donedate').value=w.doneDate||todayStr();
   document.getElementById('e-doneDateRow').style.display=w.status==='done'?'flex':'none';
-  document.getElementById('e-meter-a').value=w.meter?.[U.id]||3;
-  document.getElementById('e-meter-b').value=w.meter?.[P.id]||3;
+  const eMeterA=document.getElementById('e-meter-a');
+  eMeterA.value=w.meter?.[U.id] ?? 3;
+  eMeterTouched=false;
+  eMeterA.oninput=()=>{eMeterTouched=true};
+  const eMeterB=document.getElementById('e-meter-b');
+  eMeterB.value=w.meter?.[P.id] ?? 3;
+  eMeterB.disabled=true;
 
   clearPlusList('e-url-list');
   (w.urls?.length?w.urls:['']).forEach(v=>addPlusInput('e-url-list','url',v));
@@ -571,7 +589,7 @@ function submitEdit(){
   w.imageUrl=document.getElementById('e-image').value.trim();
   w.memo=document.getElementById('e-memo').value.trim();
   w.tags=tags;
-  w.meter={[U.id]:Number(document.getElementById('e-meter-a').value),[P.id]:Number(document.getElementById('e-meter-b').value)};
+  w.meter={[U.id]:eMeterTouched?Number(document.getElementById('e-meter-a').value):w.meter?.[U.id] ?? null,[P.id]:w.meter?.[P.id] ?? null};
   if(w.status==='done')w.doneDate=document.getElementById('e-donedate').value||w.doneDate;
   persist();closeM('editModal');render();
 }
