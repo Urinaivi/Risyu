@@ -36,7 +36,7 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .bingo-wrap.is-bingo{box-shadow:0 8px 24px rgba(245,158,11,.32),0 0 0 2px rgba(245,158,11,.22);animation:bingoGlow 1.6s ease-in-out infinite}
 .bingo-wrap.is-bingo::after{content:'✨';position:absolute;right:12px;top:10px;font-size:18px;animation:sparkle 1.8s ease-in-out infinite}
 .bingo-title{font-size:30px;font-weight:900;letter-spacing:.12em;text-align:center;margin-bottom:12px;color:var(--text)}
-.bingo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;touch-action:pan-y}
+.bingo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;touch-action:pan-y}
 .bingo-cell{aspect-ratio:1;border-radius:7px;background:#f0f0f5;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:500;color:var(--sub);cursor:pointer;text-align:center;padding:3px;line-height:1.25;transition:all .15s;overflow:hidden;word-break:break-all;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .bingo-cell:active{transform:scale(.9)}
 .bingo-cell.empty-cell{color:var(--muted);font-size:18px}
@@ -159,9 +159,15 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 
 <script src="auth.js"></script>
 <script>
+const BINGO_SIZE=4;
 const BINGO_STORE='bingo_v1',WANTS_STORE='wants_v2',REWARD_STORE='bingo_reward_by_count_v1';
 const SEASON_DEFS=[{key:'spring',emoji:'🌸',label:'春',start:'03-01',end:'05-31'},{key:'summer',emoji:'🌻',label:'夏',start:'06-01',end:'08-31'},{key:'autumn',emoji:'🍂',label:'秋',start:'09-01',end:'11-30'},{key:'winter',emoji:'❄️',label:'冬',start:'12-01',end:'02-28'}];
-const BINGO_LINES=[[0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24],[0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24],[0,6,12,18,24],[4,8,12,16,20]];
+const BINGO_LINES=[
+  ...Array.from({length:BINGO_SIZE},(_,r)=>Array.from({length:BINGO_SIZE},(_,c)=>r*BINGO_SIZE+c)),
+  ...Array.from({length:BINGO_SIZE},(_,c)=>Array.from({length:BINGO_SIZE},(_,r)=>r*BINGO_SIZE+c)),
+  Array.from({length:BINGO_SIZE},(_,i)=>i*BINGO_SIZE+i),
+  Array.from({length:BINGO_SIZE},(_,i)=>(i+1)*BINGO_SIZE-(i+1))
+];
 let bingoData,wantsItems,rewardMap,seasonIdx=0,editMode=false,pickerCellIdx=-1,U,P;
 
 
@@ -179,7 +185,7 @@ function init(){
 
 function loadBingo(){try{const d=JSON.parse(localStorage.getItem(BINGO_STORE));if(d&&Array.isArray(d.seasons))return d}catch{}return{seasons:[]}}
 function loadWants(){try{const d=JSON.parse(localStorage.getItem(WANTS_STORE)||localStorage.getItem('wants_v1'));if(Array.isArray(d))return d}catch{}return[]}
-function defaultRewardMap(){const map={};for(let i=1;i<=12;i++)map[i]=`${i}ビンゴ達成のごほうびを設定してください 🎁`;return map}
+function defaultRewardMap(){const map={};for(let i=1;i<=BINGO_SIZE*2+2;i++)map[i]=`${i}ビンゴ達成のごほうびを設定してください 🎁`;return map}
 function loadRewardMap(){try{const d=JSON.parse(localStorage.getItem(REWARD_STORE));if(d&&typeof d==='object'){return{...defaultRewardMap(),...d}}}catch{}return defaultRewardMap()}
 function persist(){localStorage.setItem(BINGO_STORE,JSON.stringify(bingoData));syncOnSave('bingo',bingoData);}
 function accountName(id){return id===U.id?U.name:P.name}
@@ -188,10 +194,17 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&l
 
 function buildSeasonDates(year,def){const ey=def.key==='winter'?year+1:year;const ed=def.key==='winter'?leapEnd(ey):def.end;return{start:`${year}-${def.start}`,end:`${ey}-${ed}`}}
 function leapEnd(year){return new Date(year,2,0).getDate()===29?'02-29':'02-28'}
+function normalizeSeasonCells(season){
+  const size=BINGO_SIZE*BINGO_SIZE;
+  if(!Array.isArray(season.cells)) season.cells=Array(size).fill(null);
+  if(season.cells.length>size) season.cells=season.cells.slice(0,size);
+  while(season.cells.length<size) season.cells.push(null);
+}
 function ensureSeasons(){
   if(!bingoData.seasons)bingoData.seasons=[];
+  bingoData.seasons.forEach(normalizeSeasonCells);
   const now=new Date(),y=now.getFullYear();
-  [y-1,y,y+1].forEach(yr=>SEASON_DEFS.forEach(def=>{const id=`${yr}-${def.key}`;if(!bingoData.seasons.find(s=>s.id===id)){const dates=buildSeasonDates(yr,def);bingoData.seasons.push({id,year:yr,seasonKey:def.key,label:`${yr}年 ${def.emoji}${def.label}`,start:dates.start,end:dates.end,cells:Array(25).fill(null),generatedAt:new Date().toISOString()})}}));
+  [y-1,y,y+1].forEach(yr=>SEASON_DEFS.forEach(def=>{const id=`${yr}-${def.key}`;if(!bingoData.seasons.find(s=>s.id===id)){const dates=buildSeasonDates(yr,def);bingoData.seasons.push({id,year:yr,seasonKey:def.key,label:`${yr}年 ${def.emoji}${def.label}`,start:dates.start,end:dates.end,cells:Array(BINGO_SIZE*BINGO_SIZE).fill(null),generatedAt:new Date().toISOString()})}}));
   bingoData.seasons.sort((a,b)=>a.start.localeCompare(b.start));
   const y3=3*365*24*60*60*1000;bingoData.seasons=bingoData.seasons.filter(s=>Date.now()-new Date(s.generatedAt).getTime()<y3);
   persist();
@@ -199,6 +212,15 @@ function ensureSeasons(){
 function isExpired(s){return new Date()>new Date(s.end+'T23:59:59')}
 function isActive(s){const now=new Date();return now>=new Date(s.start)&&now<=new Date(s.end+'T23:59:59')}
 function currentSeasonIdx(){const i=bingoData.seasons.findIndex(s=>isActive(s));return i>=0?i:Math.max(0,bingoData.seasons.findIndex(s=>!isExpired(s)))}
+function cleanBingoTitle(text){
+  if(!text)return'';
+  return String(text)
+    .replace(/data:image\/[^
+\s,]+/gi,'')
+    .replace(/data:[^\s,]+/gi,'')
+    .replace(/\s{2,}/g,' ')
+    .trim();
+}
 function syncCells(season){
   wantsItems=loadWants();
   season.cells.forEach((cell,i)=>{
@@ -207,12 +229,12 @@ function syncCells(season){
     if(w){
       season.cells[i]={
         ...cell,
-        title:w.title||cell.title,
+        title:cleanBingoTitle(w.title)||cell.title,
         cleared:w.status==='done',
         status:w.status
       };
     }else{
-      season.cells[i]={...cell,status:cell.status||'pending'};
+      season.cells[i]=null;
     }
   });
 }
@@ -241,13 +263,14 @@ function render(){
     return`<div class="${cls}" onclick="cellTap(${i})">${label}</div>`;
   }).join('');
   const bingoHTML=bingoCount>0?`<div class="bingo-banner bingo-pop"><div class="bingo-banner-title">🎉 ${bingoCount}ライン ビンゴ達成！</div><div class="bingo-banner-sub">報酬をゲットしよう！ ✨</div></div>`:'';
-  const rewardListHTML=Array.from({length:12},(_,n)=>n+1).map(cnt=>{
+  const maxRewards=BINGO_SIZE*2+2;
+  const rewardListHTML=Array.from({length:maxRewards},(_,n)=>n+1).map(cnt=>{
     const hit=bingoCount>=cnt;
     return `<div class="reward-item${hit?' hit':''}"><span class="reward-num">${cnt}ビンゴ</span><span class="reward-desc">${esc(rewardMap[cnt])}</span></div>`;
   }).join('');
-  const activeReward=bingoCount>0?`<div class="reward-current">現在の達成報酬：${esc(rewardMap[Math.min(12,bingoCount)])}</div>`:'';
+  const activeReward=bingoCount>0?`<div class="reward-current">現在の達成報酬：${esc(rewardMap[Math.min(maxRewards,bingoCount)])}</div>`:'';
   const tag=expired?'<div class="expired-tag">終了済み</div>':'';
-   el.innerHTML=`<div class="season-nav"><button class="nav-arrow" onclick="moveSeason(-1)" ${seasonIdx===0?'disabled':''}>‹</button><div class="season-label-wrap"><div class="season-label">${season.label}</div><div class="season-period">${fmtDate(season.start)} 〜 ${fmtDate(season.end)}</div>${tag}</div><button class="nav-arrow" onclick="moveSeason(1)" ${seasonIdx===bingoData.seasons.length-1?'disabled':''}>›</button></div><div class="bingo-wrap fade-in ${bingoCount>0?'is-bingo':''}"><div class="bingo-title">BINGO</div><div class="bingo-grid">${gridHTML}</div><div class="bingo-count">${bingoCount>0?`<div class="bingo-chip">🎯 ${bingoCount} BINGO!</div>`:''}<div class="clear-count">${cleared} / 25 マスクリア</div></div></div>${bingoHTML}<div class="reward-card"><div class="reward-header"><span class="reward-label">ビンゴ報酬（1〜12ライン）</span><button class="reward-edit-btn" onclick="openRewardModal()">✏️ 編集</button></div><div class="reward-list">${rewardListHTML}</div>${activeReward}</div><div style="height:6px"></div>`;}
+   el.innerHTML=`<div class="season-nav"><button class="nav-arrow" onclick="moveSeason(-1)" ${seasonIdx===0?'disabled':''}>‹</button><div class="season-label-wrap"><div class="season-label">${season.label}</div><div class="season-period">${fmtDate(season.start)} 〜 ${fmtDate(season.end)}</div>${tag}</div><button class="nav-arrow" onclick="moveSeason(1)" ${seasonIdx===bingoData.seasons.length-1?'disabled':''}>›</button></div><div class="bingo-wrap fade-in ${bingoCount>0?'is-bingo':''}"><div class="bingo-title">BINGO</div><div class="bingo-grid">${gridHTML}</div><div class="bingo-count">${bingoCount>0?`<div class="bingo-chip">🎯 ${bingoCount} BINGO!</div>`:''}<div class="clear-count">${cleared} / ${BINGO_SIZE*BINGO_SIZE} マスクリア</div></div></div>${bingoHTML}<div class="reward-card"><div class="reward-header"><span class="reward-label">ビンゴ報酬（1〜${BINGO_SIZE*2+2}ライン）</span><button class="reward-edit-btn" onclick="openRewardModal()">✏️ 編集</button></div><div class="reward-list">${rewardListHTML}</div>${activeReward}</div><div style="height:6px"></div>`;}
 
 function moveSeason(dir){seasonIdx=Math.max(0,Math.min(bingoData.seasons.length-1,seasonIdx+dir));render()}
 function toggleEdit(){const s=bingoData.seasons[seasonIdx];if(isExpired(s))return;editMode=!editMode;render()}
@@ -278,19 +301,20 @@ function pickWants(wantsId){
   const w=loadWants().find(x=>x.id===wantsId);
   if(!w)return;
   const season=bingoData.seasons[seasonIdx];
-  season.cells[pickerCellIdx]={wantsId,title:w.title,cleared:w.status==='done',status:w.status};
+  season.cells[pickerCellIdx]={wantsId,title:cleanBingoTitle(w.title),cleared:w.status==='done',status:w.status};
   persist();closeM('pickerModal');render();
 }
 function clearCell(){bingoData.seasons[seasonIdx].cells[pickerCellIdx]=null;persist();closeM('pickerModal');render()}
 
 function showCellDetail(cell,idx){
   const w=loadWants().find(x=>x.id===cell.wantsId);
-  document.getElementById('cellViewBody').innerHTML=`<div style="padding:4px 16px 12px;font-size:18px;font-weight:700;color:var(--text)">${cell.title}</div><div class="det-row"><span class="det-k">状態</span><span class="det-v">${cell.cleared?'✅ クリア済み':'⏳ 未クリア'}</span></div><div class="det-row"><span class="det-k">マス番号</span><span class="det-v">${idx+1} / 25</span></div>${w?`<div class="det-row"><span class="det-k">登録者</span><span class="det-v">${accountIcon(w.registrar)} ${accountName(w.registrar)}</span></div>${w.doneDate?`<div class="det-row"><span class="det-k">実行日</span><span class="det-v">${fmtDate(w.doneDate)}</span></div>`:''} ${w.period?`<div class="det-row"><span class="det-k">期間</span><span class="det-v">${w.period}</span></div>`:''} ${w.memo?`<div class="det-row"><span class="det-k">メモ</span><span class="det-v">${w.memo}</span></div>`:''}`:''}`; 
+  document.getElementById('cellViewBody').innerHTML=`<div style="padding:4px 16px 12px;font-size:18px;font-weight:700;color:var(--text)">${cell.title}</div><div class="det-row"><span class="det-k">状態</span><span class="det-v">${cell.cleared?'✅ クリア済み':'⏳ 未クリア'}</span></div><div class="det-row"><span class="det-k">マス番号</span><span class="det-v">${idx+1} / ${BINGO_SIZE*BINGO_SIZE}</span></div>${w?`<div class="det-row"><span class="det-k">登録者</span><span class="det-v">${accountIcon(w.registrar)} ${accountName(w.registrar)}</span></div>${w.doneDate?`<div class="det-row"><span class="det-k">実行日</span><span class="det-v">${fmtDate(w.doneDate)}</span></div>`:''} ${w.period?`<div class="det-row"><span class="det-k">期間</span><span class="det-v">${w.period}</span></div>`:''} ${w.memo?`<div class="det-row"><span class="det-k">メモ</span><span class="det-v">${w.memo}</span></div>`:''}`:''}`; 
   openM('cellViewModal');
 }
 
 function openRewardModal(){
-  const formHTML=Array.from({length:12},(_,n)=>n+1).map(cnt=>`<div class="f-card"><div class="f-row"><span class="f-lbl">${cnt}ビンゴ</span><textarea class="f-inp reward-input" data-count="${cnt}" rows="2" placeholder="${cnt}ビンゴ時の報酬">${esc(rewardMap[cnt])}</textarea></div></div>`).join('');
+  const maxRewards=BINGO_SIZE*2+2;
+  const formHTML=Array.from({length:maxRewards},(_,n)=>n+1).map(cnt=>`<div class="f-card"><div class="f-row"><span class="f-lbl">${cnt}ビンゴ</span><textarea class="f-inp reward-input" data-count="${cnt}" rows="2" placeholder="${cnt}ビンゴ時の報酬">${esc(rewardMap[cnt])}</textarea></div></div>`).join('');
   document.getElementById('rewardFormList').innerHTML=formHTML;
   openM('rewardModal');
 }

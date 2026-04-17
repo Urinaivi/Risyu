@@ -538,8 +538,35 @@ function openDetail(id){
     toggleBtn.textContent='✅ 実行済みにする';toggleBtn.className='ok-btn green';
     toggleBtn.onclick=()=>{w.status='done';w.doneDate=todayStr();persist();closeM('detModal');render()};
   }
-  document.getElementById('delBtn').onclick=()=>{if(!confirm('削除しますか？'))return;items=items.filter(x=>x.id!==id);persist();closeM('detModal');render()};
+  document.getElementById('delBtn').onclick=()=>{
+    if(!confirm('削除しますか？'))return;
+    items=items.filter(x=>x.id!==id);
+    persist();
+    cleanupBingoCells(id);
+    closeM('detModal');
+    render();
+  };
   openM('detModal');
+}
+
+function cleanupBingoCells(wantsId){
+  try{
+    const raw=localStorage.getItem('bingo_v1');
+    if(!raw)return;
+    const bingoData=JSON.parse(raw);
+    if(!bingoData||!Array.isArray(bingoData.seasons))return;
+    let changed=false;
+    bingoData.seasons.forEach(season=>{
+      if(!Array.isArray(season.cells))return;
+      const updated=season.cells.map(cell=>cell&&cell.wantsId===wantsId?null:cell);
+      if(updated.some((cell,i)=>cell!==season.cells[i])) changed=true;
+      season.cells=updated;
+    });
+    if(changed){
+      localStorage.setItem('bingo_v1',JSON.stringify(bingoData));
+      syncOnSave('bingo',bingoData);
+    }
+  }catch{}
 }
 
 function openEdit(){
