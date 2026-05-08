@@ -227,7 +227,7 @@ function fmtDT(s){if(!s)return'—';const d=new Date(s);if(isNaN(d))return s;con
 let payments,tab='me',fWho='me',fStatus='unpaid',gWho='me',gasAmount=0;
 let U,P,partialTargetId=null;
 
-function init(){
+async function init(){
   if(!requireLogin())return;
   U=currentUser(); P=getAccount(partnerId());
   applyTheme(U.theme);
@@ -239,11 +239,11 @@ function init(){
   document.getElementById('g-me').innerHTML=iconHTML(U.icon,14)+' '+U.name;
   document.getElementById('g-partner').innerHTML=iconHTML(P.icon,14)+' '+P.name;
   try{const s=JSON.parse(localStorage.getItem(STORE));payments=(Array.isArray(s)&&s.length)?s.map(migratePayment):[];}catch{payments=[]}
-  syncOnLoad(["payments","accounts"]).then(()=>{
-    try{const s=JSON.parse(localStorage.getItem(STORE));payments=(Array.isArray(s)&&s.length)?s.map(migratePayment):[];}catch{}
-    autoDelete(); render();
-  });
+  await syncOnLoad(["payments","accounts"]);
+  try{const s=JSON.parse(localStorage.getItem(STORE));payments=(Array.isArray(s)&&s.length)?s.map(migratePayment):[];}catch{}
+  autoDelete(); render();
 }
+
 
 function migratePayment(p){ return {history:[], ...p}; }
 
@@ -255,7 +255,7 @@ function autoDelete(){
     return isNaN(t)||now-t<lim;
   });
 }
-function persist(){localStorage.setItem(STORE,JSON.stringify(payments));syncOnSave('payments',payments);}
+async function persist(){localStorage.setItem(STORE,JSON.stringify(payments));await syncOnSave('payments',payments);}
 function myId(){return U.id}
 function ptId(){return P.id}
 function tabId(){return tab==='me'?myId():ptId()}

@@ -373,17 +373,16 @@ function migrateItem(w){
 }
 
 /* ═══ INIT ═══ */
-function init(){
+async function init(){
   if(!requireLogin())return;
   U=currentUser(); P=getAccount(partnerId());
   applyTheme(U.theme);
   document.getElementById('nav').innerHTML=navHTML('wants');
   // wants画面を開いたら既読にする
   markAllNotifsRead();
-  syncOnLoad(['wants','accounts']).then(()=>{
-    try{const s=JSON.parse(localStorage.getItem(STORE));items=(Array.isArray(s)&&s.length)?s.map(migrateItem):sampleItems()}catch{items=sampleItems()}
-    autoDelete(); applyFilterUI(); render();
-  });
+  await syncOnLoad(['wants','accounts']);
+  try{const s=JSON.parse(localStorage.getItem(STORE));items=(Array.isArray(s)&&s.length)?s.map(migrateItem):sampleItems()}catch{items=sampleItems()}
+  autoDelete(); applyFilterUI(); render();
 }
 
 function sampleItems(){return[
@@ -394,9 +393,9 @@ function sampleItems(){return[
 function accountName(id){return id===U.id?U.name:P.name}
 function accountIcon(id){return id===U.id?U.icon:P.icon}
 
-function persist(notifMsg){
+async function persist(notifMsg){
   localStorage.setItem(STORE,JSON.stringify(items));
-  syncOnSave('wants',items);
+  await syncOnSave('wants',items);
   if(notifMsg) addNotif(notifMsg);
 }
 function autoDelete(){

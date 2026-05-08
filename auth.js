@@ -157,17 +157,18 @@ async function syncOnLoad(targets=[],userId=''){
   await Promise.all(targets.map(async t=>{
     if(t==='payments'){const d=await loadPaymentsRemote();if(d&&d.length)localStorage.setItem('pay_v1',JSON.stringify(d));}
     else if(t==='wants'){
-      const d=await loadWantsRemote();
-      if(d&&d.length){
-        // ローカルの画像データをマージ（GASには画像を保存しないため）
-        try{
-          const local=JSON.parse(localStorage.getItem('wants_v1')||'[]');
-          const merged=d.map(remote=>{
-            const loc=local.find(l=>l.id===remote.id);
-            return loc?{...remote,image:loc.image||'',imgSize:loc.imgSize||120}:remote;
-          });
-          localStorage.setItem('wants_v1',JSON.stringify(merged));
-        }catch{localStorage.setItem('wants_v1',JSON.stringify(d));}
+      const local=JSON.parse(localStorage.getItem('wants_v1')||'[]');
+      const remote=await loadWantsRemote();
+      if(remote&&remote.length){
+        // ローカルをベースに、リモートからの更新をマージ
+        const merged=local.map(loc=>{
+          const rem=remote.find(r=>r.id===loc.id);
+          return rem?{...rem,image:loc.image||'',imgSize:loc.imgSize||120}:loc;
+        });
+        // リモートにあってローカルにないものを追加
+        const newFromRemote=remote.filter(rem=>!local.some(loc=>loc.id===rem.id));
+        merged.push(...newFromRemote);
+        localStorage.setItem('wants_v1',JSON.stringify(merged));
       }
     }
     else if(t==='stamp'&&userId){const d=await loadStampRemote(userId);if(d)localStorage.setItem('stamp_v1_'+userId,JSON.stringify(d));}

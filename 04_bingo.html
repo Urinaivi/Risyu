@@ -171,23 +171,22 @@ const BINGO_LINES=[
 let bingoData,wantsItems,rewardMap,seasonIdx=0,editMode=false,pickerCellIdx=-1,U,P;
 
 
-function init(){
+async function init(){
   if(!requireLogin())return;
   U=currentUser();P=getAccount(partnerId());
   applyTheme(U.theme);
   document.getElementById('nav').innerHTML=navHTML('wants');
-  syncOnLoad(['bingo','wants','accounts']).then(()=>{
-    bingoData=loadBingo();wantsItems=loadWants();
-    rewardMap=loadRewardMap();
-    ensureSeasons();seasonIdx=currentSeasonIdx();render();
-  });
+  await syncOnLoad(['bingo','wants','accounts']);
+  bingoData=loadBingo();wantsItems=loadWants();
+  rewardMap=loadRewardMap();
+  ensureSeasons();seasonIdx=currentSeasonIdx();render();
 }
 
 function loadBingo(){try{const d=JSON.parse(localStorage.getItem(BINGO_STORE));if(d&&Array.isArray(d.seasons))return d}catch{}return{seasons:[]}}
 function loadWants(){try{const d=JSON.parse(localStorage.getItem(WANTS_STORE)||localStorage.getItem('wants_v1'));if(Array.isArray(d))return d}catch{}return[]}
 function defaultRewardMap(){const map={};for(let i=1;i<=BINGO_SIZE*2+2;i++)map[i]=`${i}ビンゴ達成のごほうびを設定してください 🎁`;return map}
 function loadRewardMap(){try{const d=JSON.parse(localStorage.getItem(REWARD_STORE));if(d&&typeof d==='object'){return{...defaultRewardMap(),...d}}}catch{}return defaultRewardMap()}
-function persist(){localStorage.setItem(BINGO_STORE,JSON.stringify(bingoData));syncOnSave('bingo',bingoData);}
+async function persist(){localStorage.setItem(BINGO_STORE,JSON.stringify(bingoData));await syncOnSave('bingo',bingoData);}
 function accountName(id){return id===U.id?U.name:P.name}
 function accountIcon(id){return id===U.id?U.icon:P.icon}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}

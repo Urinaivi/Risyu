@@ -152,7 +152,7 @@ function fmtMD(isoDate){
   return`${d.getMonth()+1}/${d.getDate()}`;
 }
 
-function init(){
+async function init(){
   if(!requireLogin())return;
   U=currentUser();
   applyTheme(U.theme);
@@ -166,12 +166,11 @@ function init(){
   fab.style.boxShadow=`0 4px 18px ${U.theme||'#ff2d55'}55`;
   document.getElementById('rewardSaveBtn').style.background=U.theme||'#ff2d55';
 
-  syncOnLoad(['stamp','accounts'],U.id).then(()=>{
-    data=loadData();
-    reward=localStorage.getItem(REWARD_STORE)||'互いに好きな報酬を決める 🎁';
-    cardIdx=data.cards.length-1;
-    render();
-  });
+  await syncOnLoad(['stamp','accounts'],U.id);
+  data=loadData();
+  reward=localStorage.getItem(REWARD_STORE)||'互いに好きな報酬を決める 🎁';
+  cardIdx=data.cards.length-1;
+  render();
 }
 
 function loadData(){
@@ -207,7 +206,7 @@ function stampedTodayCard(card){
   return (card.stampDays||[]).some(d=>d===today);
 }
 
-function persist(){localStorage.setItem(STORE,JSON.stringify(data));syncOnSave('stamp',data,U.id);}
+async function persist(){localStorage.setItem(STORE,JSON.stringify(data));await syncOnSave('stamp',data,U.id);}
 
 function render(){
   const el=document.getElementById('scroll');
