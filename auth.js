@@ -1,5 +1,6 @@
 /* ================================================================
    auth.js  ―  認証 / アカウント / テーマ / GAS同期 共通ユーティリティ
+   ※ スタンプカード・ビンゴ機能は廃止。計画書(plans)機能を追加。
 ================================================================ */
 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzcrClFMEY1FeQu1IHALsIxokegXL8JcJjZOo9r9peaEOfMtnQ4g_LTVeEFUQwRIafW/exec';
@@ -60,15 +61,14 @@ function markAllNotifsRead(){
 }
 function getUnreadCount(){ return getNotifs().filter(n=>!n.read).length; }
 
-/* ─── ナビゲーション ─── */
-function navHTML(activePage, showBadge=false) {
+/* ─── ナビゲーション（4画面構成） ─── */
+function navHTML(activePage) {
   const unread = getUnreadCount();
   const pages=[
-    {key:'home',  icon:'🏠',label:'ホーム',   href:'index.html'},
-    {key:'pay',   icon:'💰',label:'支払い',   href:'01_payment.html'},
-    {key:'wants', icon:'📋',label:'やりたい', href:'02_wants.html'},
-    {key:'stamp', icon:'🔖',label:'スタンプ', href:'03_stamp.html'},
-    {key:'mypage',icon:'👤',label:'マイページ',href:'mypage.html'},
+    {key:'home',  icon:'🏠',label:'ホーム',     href:'index.html'},
+    {key:'pay',   icon:'💰',label:'支払い',     href:'01_payment.html'},
+    {key:'wants', icon:'📋',label:'やりたい',   href:'02_wants.html'},
+    {key:'mypage',icon:'👤',label:'マイページ', href:'mypage.html'},
   ];
   return pages.map(p=>{
     const hasBadge = p.key==='wants' && unread>0;
@@ -107,7 +107,7 @@ const PAY_HDR=['id','date','amount','memo','who','status','paidDate','createdAt'
 async function loadPaymentsRemote(){return gasGet('payments',rows=>{if(rows.length<=1)return[];return rows.slice(1).map(r=>({id:r[0],date:r[1],amount:Number(r[2]),memo:r[3],who:r[4],status:r[5],paidDate:r[6]||null,createdAt:r[7],history:r[8]?JSON.parse(r[8]):[]})).filter(p=>p.id);})}
 async function savePaymentsRemote(payments){return gasSet('payments',[PAY_HDR,...payments.map(p=>[p.id,p.date,p.amount,p.memo||'',p.who,p.status,p.paidDate||'',p.createdAt||'',JSON.stringify(p.history||[])])]);}
 
-/* ── やりたいこと（desireBフィールド追加） ── */
+/* ── やりたいこと（desireBフィールド含む） ── */
 const WANTS_HDR=['id','title','regDate','period','url','memo','registrar','status','doneDate','createdAt','tags','map','cost','image','desire','desireB','imgSize'];
 async function loadWantsRemote(){return gasGet('wants',rows=>{if(rows.length<=1)return[];return rows.slice(1).map(r=>({
   id:r[0],title:r[1],regDate:r[2],period:r[3],url:r[4],memo:r[5],registrar:r[6],status:r[7],
@@ -130,13 +130,32 @@ async function saveWantsRemote(wants){
     w.desire||0,w.desireB||0,w.imgSize||120
   ])]);}
 
-/* ── スタンプ ── */
-async function loadStampRemote(uid){return gasGet('stamp_'+uid,rows=>{if(rows.length<2)return null;try{return JSON.parse(rows[1][0]);}catch{return null;}})}
-async function saveStampRemote(uid,data){return gasSet('stamp_'+uid,[['data'],[JSON.stringify(data)]]);}
-
-/* ── ビンゴ ── */
-async function loadBingoRemote(){return gasGet('bingo',rows=>{if(rows.length<2)return null;try{return JSON.parse(rows[1][0]);}catch{return null;}})}
-async function saveBingoRemote(data){return gasSet('bingo',[['data'],[JSON.stringify(data)]]);}
+/* ── 計画書（やりたいことリストの1項目に対し0〜1件、wantsIdで紐づく） ── */
+const PLAN_HDR=['id','wantsId','title','date','url','schedule','items','expenses','shoppingList','memo','reservation','todoList','createdAt','updatedAt'];
+async function loadPlansRemote(){return gasGet('plans',rows=>{if(rows.length<=1)return[];return rows.slice(1).map(r=>({
+  id:r[0],wantsId:r[1],title:r[2],date:r[3],url:r[4],
+  schedule:r[5]?tryParse(r[5],[]):[],
+  items:r[6]?tryParse(r[6],[]):[],
+  expenses:r[7]?tryParse(r[7],[]):[],
+  shoppingList:r[8]?tryParse(r[8],[]):[],
+  memo:r[9]||'',
+  reservation:r[10]||'',
+  todoList:r[11]?tryParse(r[11],[]):[],
+  createdAt:r[12]||'',updatedAt:r[13]||'',
+})).filter(p=>p.id);})}
+async function savePlansRemote(plans){
+  return gasSet('plans',[PLAN_HDR,...plans.map(p=>[
+    p.id,p.wantsId,p.title||'',p.date||'',p.url||'',
+    JSON.stringify(p.schedule||[]),
+    JSON.stringify(p.items||[]),
+    JSON.stringify(p.expenses||[]),
+    JSON.stringify(p.shoppingList||[]),
+    p.memo||'',
+    p.reservation||'',
+    JSON.stringify(p.todoList||[]),
+    p.createdAt||'',p.updatedAt||''
+  ])]);
+}
 
 /* ── アカウント ── */
 async function syncAccountsRemote(){
@@ -152,7 +171,7 @@ async function saveAccountsRemote(accounts){
 }
 
 /* ── syncOnLoad / syncOnSave ── */
-async function syncOnLoad(targets=[],userId=''){
+async function syncOnLoad(targets=[]){
   if(!GAS_ENABLED)return;
   await Promise.all(targets.map(async t=>{
     if(t==='payments'){const d=await loadPaymentsRemote();if(d&&d.length)localStorage.setItem('pay_v1',JSON.stringify(d));}
@@ -171,19 +190,20 @@ async function syncOnLoad(targets=[],userId=''){
         localStorage.setItem('wants_v1',JSON.stringify(merged));
       }
     }
-    else if(t==='stamp'&&userId){const d=await loadStampRemote(userId);if(d)localStorage.setItem('stamp_v1_'+userId,JSON.stringify(d));}
-    else if(t==='bingo'){const d=await loadBingoRemote();if(d)localStorage.setItem('bingo_v1',JSON.stringify(d));}
+    else if(t==='plans'){
+      const remote=await loadPlansRemote();
+      if(remote)localStorage.setItem('plans_v1',JSON.stringify(remote));
+    }
     else if(t==='accounts'){await syncAccountsRemote();}
   }));
 }
 
-function syncOnSave(type,data,userId=''){
+function syncOnSave(type,data){
   if(!GAS_ENABLED)return;
   (async()=>{
     if(type==='payments')      await savePaymentsRemote(data);
     else if(type==='wants')    await saveWantsRemote(data);
-    else if(type==='stamp'&&userId) await saveStampRemote(userId,data);
-    else if(type==='bingo')    await saveBingoRemote(data);
+    else if(type==='plans')    await savePlansRemote(data);
     else if(type==='accounts') await saveAccountsRemote(data);
   })();
 }

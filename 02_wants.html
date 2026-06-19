@@ -22,7 +22,6 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .search-box input::placeholder{color:var(--muted)}
 .scroll{flex:1;overflow-y:auto;padding:0 14px 20px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .scroll::-webkit-scrollbar{display:none}
-/* charts */
 .chart-row{display:flex;gap:8px;margin-bottom:8px}
 .chart-box{flex:1;background:var(--card);border-radius:var(--r);padding:14px 10px;display:flex;flex-direction:column;align-items:center}
 .chart-lbl{font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.04em;margin-bottom:8px;text-align:center}
@@ -32,7 +31,6 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .pie-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
 .pie-num{font-size:16px;font-weight:700;color:var(--text)}
 .pie-unit{font-size:10px;color:var(--sub)}
-/* list */
 .sec-lbl{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.07em;text-transform:uppercase;padding:14px 2px 6px}
 .c-list{background:var(--card);border-radius:var(--r);overflow:hidden;margin-bottom:6px}
 .c-row{display:flex;align-items:stretch;border-bottom:.5px solid var(--border);cursor:pointer;transition:background .12s;-webkit-tap-highlight-color:transparent;overflow:hidden}
@@ -53,17 +51,14 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .b-orange{background:#fff3e0;color:var(--orange)}
 .b-green{background:#e3f9eb;color:var(--green)}
 .empty-row{padding:24px;text-align:center;font-size:14px;color:var(--muted)}
-/* fab */
 .fab{position:absolute;bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px) + 18px);right:18px;width:54px;height:54px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(124,122,255,.5);transition:transform .15s;z-index:20}
 .fab:active{transform:scale(.91)}
-/* nav */
 .nav{height:calc(var(--nav) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);background:rgba(250,250,250,.96);border-top:.5px solid var(--border);display:flex;align-items:flex-start;flex-shrink:0;backdrop-filter:blur(20px);z-index:30}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:10px 0 6px;border:none;background:none;-webkit-tap-highlight-color:transparent;transition:transform .1s;position:relative}
 .nav-item:active{transform:scale(.88)}
 .nav-icon{font-size:20px;line-height:1}
 .nav-lbl{font-size:10px;font-weight:500;color:var(--muted)}
 .nav-item.active .nav-lbl{color:var(--accent);font-weight:700}
-/* overlay */
 .overlay{position:absolute;inset:0;background:rgba(0,0,0,.42);z-index:100;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .22s}
 .overlay.open{opacity:1;pointer-events:all}
 .sheet{width:100%;background:var(--bg);border-radius:24px 24px 0 0;transform:translateY(100%);max-height:94%;overflow-y:auto;transition:transform .3s cubic-bezier(.32,.72,0,1)}
@@ -72,7 +67,6 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .sh-hdr{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 10px}
 .sh-title{font-size:17px;font-weight:700;color:var(--text)}
 .x-btn{width:28px;height:28px;border-radius:50%;background:#e4e4e9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--sub)}
-/* form */
 .f-card{background:var(--card);border-radius:var(--r);margin:0 14px 10px;overflow:hidden}
 .f-row{display:flex;align-items:flex-start;padding:13px 16px;border-bottom:.5px solid var(--border);gap:10px}
 .f-row:last-child{border-bottom:none}
@@ -83,7 +77,6 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .f-inp.left::placeholder{text-align:left}
 input[type=date]{color-scheme:light}
 textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
-/* tag input */
 .tag-input-wrap{flex:1;display:flex;flex-wrap:wrap;gap:4px;align-items:center;min-height:28px;position:relative}
 .tag-chip{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;background:var(--accent);color:#fff;font-size:12px;font-weight:600}
 .tag-chip-del{font-size:11px;cursor:pointer;opacity:.7}
@@ -94,29 +87,24 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
 .tag-dd-item{padding:10px 14px;font-size:14px;color:var(--text);cursor:pointer;border-bottom:.5px solid var(--border)}
 .tag-dd-item:last-child{border-bottom:none}
 .tag-dd-item:active{background:#f5f5fa}
-/* period */
 .period-wrap{flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
 .period-single-row{display:flex;align-items:center;gap:6px}
 .period-toggle-btn{width:26px;height:26px;border-radius:50%;border:none;background:#e4e4e9;color:var(--sub);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;line-height:1;font-family:sans-serif}
 .period-toggle-btn:active{background:var(--accent);color:#fff}
 .period-date-inp{border:none;outline:none;font-size:14px;font-family:'Noto Sans JP',sans-serif;color:var(--text);background:transparent;text-align:right;color-scheme:light}
-/* desire */
 .desire-my-row{display:flex;align-items:center;gap:6px;margin-left:auto}
 .desire-sub-lbl{font-size:11px;color:var(--sub);font-weight:600;white-space:nowrap}
 .d-star{font-size:22px;cursor:pointer;transition:transform .1s;-webkit-tap-highlight-color:transparent;line-height:1}
 .d-star:active{transform:scale(.85)}
-/* cost */
 .cost-g{display:flex;gap:5px;margin-left:auto}
 .cost-btn{padding:7px 11px;border-radius:10px;font-size:13px;font-weight:700;font-family:'Noto Sans JP',sans-serif;border:none;cursor:pointer;transition:background .15s,color .15s}
 .cost-off{background:#e4e4e9;color:var(--sub)}
 .cost-on{background:var(--accent);color:#fff}
-/* image */
 .img-upload-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:12px;border:1.5px dashed var(--muted);border-radius:10px;background:transparent;cursor:pointer;font-size:14px;color:var(--sub);font-family:'Noto Sans JP',sans-serif}
 .img-remove{display:block;text-align:center;font-size:13px;color:var(--red);cursor:pointer;padding:4px 0;font-weight:600}
 .img-size-row{display:flex;align-items:center;gap:8px;margin-top:6px;padding:0 4px}
 .img-size-row label{font-size:11px;color:var(--sub);white-space:nowrap}
 .img-size-row input{flex:1}
-/* ok/del */
 .tgl-g{display:flex;gap:6px;margin-left:auto}
 .tgl{padding:7px 12px;border-radius:11px;font-size:12px;font-weight:700;font-family:'Noto Sans JP',sans-serif;border:none;cursor:pointer;transition:background .16s,color .16s}
 .tgl-off{background:#e4e4e9;color:var(--sub)}
@@ -128,7 +116,6 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
 .ok-btn.green{background:var(--green)}
 .ok-btn.orange{background:var(--orange)}
 .del-btn{display:block;width:calc(100% - 28px);margin:4px 14px 22px;padding:13px;background:#ffe5e4;color:var(--red);border:none;border-radius:var(--r);font-size:15px;font-weight:600;font-family:'Noto Sans JP',sans-serif;cursor:pointer}
-/* detail */
 .det-hero{width:100%;display:block;object-fit:cover;max-height:180px}
 .det-title{font-size:20px;font-weight:700;color:var(--text);padding:12px 16px 8px;line-height:1.4}
 .det-tags{display:flex;flex-wrap:wrap;gap:4px;padding:0 16px 10px}
@@ -141,7 +128,6 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
 .desire-both{display:flex;flex-direction:column;gap:4px;align-items:flex-end}
 .desire-both-row{display:flex;align-items:center;gap:6px}
 .desire-both-lbl{font-size:11px;color:var(--sub)}
-/* filter */
 .filter-row{display:flex;align-items:flex-start;justify-content:space-between;padding:13px 16px;border-bottom:.5px solid var(--border);gap:8px}
 .filter-row:last-child{border-bottom:none}
 .filter-lbl{font-size:14px;color:var(--text);flex-shrink:0;padding-top:4px}
@@ -149,6 +135,34 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
 .fil-tag-btn{padding:5px 10px;border-radius:20px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:background .15s}
 .fil-tag-off{background:#e4e4e9;color:var(--sub)}
 .fil-tag-on{background:var(--accent);color:#fff}
+/* ─── 計画書セクション ─── */
+.plan-section{background:var(--card);border-radius:var(--r);margin:8px 14px 0;overflow:hidden}
+.plan-empty-box{padding:20px 16px;text-align:center}
+.plan-empty-txt{font-size:13px;color:var(--sub);margin-bottom:10px}
+.plan-create-btn{padding:10px 18px;border:none;border-radius:20px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer}
+.plan-hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 8px}
+.plan-hdr-title{font-size:14px;font-weight:700;color:var(--text)}
+.plan-edit-btn{font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;font-weight:600;font-family:'Noto Sans JP',sans-serif}
+.plan-block{padding:0 16px 14px}
+.plan-block-lbl{font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.04em;margin-bottom:6px}
+.plan-sched-item{display:flex;gap:8px;align-items:baseline;padding:5px 0;font-size:13px}
+.plan-sched-time{font-weight:700;color:var(--accent);min-width:48px;flex-shrink:0}
+.plan-sched-text{color:var(--text)}
+.plan-check-item{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px}
+.plan-check-item input{width:16px;height:16px;accent-color:var(--accent);flex-shrink:0}
+.plan-check-item.checked .plan-check-text{color:var(--muted);text-decoration:line-through}
+.plan-expense-item{display:flex;justify-content:space-between;font-size:13px;padding:5px 0}
+.plan-expense-total{display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding-top:8px;border-top:.5px solid var(--border);margin-top:4px}
+.plan-text-box{font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap}
+.plan-del-btn{display:block;width:calc(100% - 32px);margin:4px 16px 16px;padding:11px;background:#ffe5e4;color:var(--red);border:none;border-radius:10px;font-size:13px;font-weight:600;font-family:'Noto Sans JP',sans-serif;cursor:pointer}
+/* 計画書編集フォーム内 */
+.plan-list-edit{padding:8px 16px 4px}
+.plan-list-row{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.plan-list-row input[type=text]{flex:1;border:.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;font-family:'Noto Sans JP',sans-serif;background:var(--bg);outline:none}
+.plan-list-row input[type=time]{width:84px;border:.5px solid var(--border);border-radius:8px;padding:8px 6px;font-size:13px;font-family:'Noto Sans JP',sans-serif;background:var(--bg);outline:none}
+.plan-list-row input[type=number]{width:90px;border:.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;font-family:'Noto Sans JP',sans-serif;background:var(--bg);outline:none;text-align:right}
+.plan-row-del{width:26px;height:26px;border-radius:50%;border:none;background:#ffe5e4;color:var(--red);font-size:13px;cursor:pointer;flex-shrink:0}
+.plan-add-row-btn{display:inline-flex;align-items:center;gap:4px;padding:7px 12px;border-radius:20px;background:#eef0ff;color:var(--accent);font-size:12px;font-weight:700;border:none;cursor:pointer;margin:2px 0 10px}
 </style>
 </head>
 <body>
@@ -157,7 +171,6 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
     <div class="hdr-title">やりたいことリスト</div>
     <div class="hdr-acts">
       <button class="hdr-btn" onclick="openFilter()">⚙️</button>
-      <button class="hdr-btn" onclick="location.href='04_bingo.html'">🎉</button>
     </div>
   </div>
   <div class="search-wrap">
@@ -200,9 +213,7 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
         </div>
         <div class="f-row">
           <span class="f-lbl">イベント日付</span>
-          <div class="period-wrap" id="addPeriodWrap">
-            <!-- renderPeriodInputs で生成 -->
-          </div>
+          <div class="period-wrap" id="addPeriodWrap"></div>
         </div>
         <div class="f-row"><span class="f-lbl">URL</span><input class="f-inp" type="url" id="f-url" placeholder="https://..."/></div>
         <div class="f-row"><span class="f-lbl">マップURL</span><input class="f-inp" type="url" id="f-map" placeholder="Google Maps URL"/></div>
@@ -242,6 +253,7 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
       <div class="sh-handle"></div>
       <div class="sh-hdr"><span class="sh-title">詳細</span><button class="x-btn" onclick="closeM('detModal')">✕</button></div>
       <div id="detBody"></div>
+      <div id="planSection"></div>
       <button class="ok-btn" id="editBtn" style="background:var(--accent);margin-bottom:6px" onclick="openEdit()">✏️ 編集する</button>
       <button class="ok-btn green" id="toggleBtn">✅ 実行済みにする</button>
       <button class="del-btn" id="delBtn">🗑 削除する</button>
@@ -311,6 +323,54 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
     </div>
   </div>
 
+  <!-- 計画書作成・編集モーダル -->
+  <div class="overlay" id="planModal" onclick="bgClose(event,'planModal')">
+    <div class="sheet">
+      <div class="sh-handle"></div>
+      <div class="sh-hdr"><span class="sh-title" id="planModalTitle">計画書を作成</span><button class="x-btn" onclick="closeM('planModal')">✕</button></div>
+      <div class="f-card">
+        <div class="f-row"><span class="f-lbl">タイトル</span><input class="f-inp" type="text" id="pl-title"/></div>
+        <div class="f-row"><span class="f-lbl">日付</span><input class="f-inp" type="text" id="pl-date" placeholder="例：2026/4/1"/></div>
+        <div class="f-row"><span class="f-lbl">URL</span><input class="f-inp" type="url" id="pl-url" placeholder="https://..."/></div>
+      </div>
+
+      <div class="sec-lbl" style="padding-left:16px">スケジュール表</div>
+      <div class="f-card"><div class="plan-list-edit" id="pl-schedule-list"></div>
+        <div style="padding:0 16px 12px"><button type="button" class="plan-add-row-btn" onclick="addScheduleRow()">＋ 行を追加</button></div>
+      </div>
+
+      <div class="sec-lbl" style="padding-left:16px">もちもの</div>
+      <div class="f-card"><div class="plan-list-edit" id="pl-items-list"></div>
+        <div style="padding:0 16px 12px"><button type="button" class="plan-add-row-btn" onclick="addChecklistRow('items')">＋ 項目を追加</button></div>
+      </div>
+
+      <div class="sec-lbl" style="padding-left:16px">出費</div>
+      <div class="f-card"><div class="plan-list-edit" id="pl-expenses-list"></div>
+        <div style="padding:0 16px 4px"><button type="button" class="plan-add-row-btn" onclick="addExpenseRow()">＋ 項目を追加</button></div>
+        <div style="padding:0 16px 12px;font-size:13px;font-weight:700;color:var(--text);text-align:right">合計：<span id="pl-expense-total">¥0</span></div>
+      </div>
+
+      <div class="sec-lbl" style="padding-left:16px">買い出しリスト</div>
+      <div class="f-card"><div class="plan-list-edit" id="pl-shopping-list"></div>
+        <div style="padding:0 16px 12px"><button type="button" class="plan-add-row-btn" onclick="addChecklistRow('shoppingList')">＋ 項目を追加</button></div>
+      </div>
+
+      <div class="sec-lbl" style="padding-left:16px">予約内容</div>
+      <div class="f-card"><div class="f-row" style="align-items:flex-start"><textarea class="f-inp left" id="pl-reservation" rows="3" placeholder="ホテル・飲食店などの予約内容"></textarea></div></div>
+
+      <div class="sec-lbl" style="padding-left:16px">やることリスト</div>
+      <div class="f-card"><div class="plan-list-edit" id="pl-todo-list"></div>
+        <div style="padding:0 16px 12px"><button type="button" class="plan-add-row-btn" onclick="addChecklistRow('todoList')">＋ 項目を追加</button></div>
+      </div>
+
+      <div class="sec-lbl" style="padding-left:16px">メモ</div>
+      <div class="f-card"><div class="f-row" style="align-items:flex-start"><textarea class="f-inp left" id="pl-memo" rows="2" placeholder="任意"></textarea></div></div>
+
+      <button class="ok-btn" onclick="submitPlan()">保存する</button>
+      <div style="height:8px"></div>
+    </div>
+  </div>
+
   <!-- フィルターモーダル -->
   <div class="overlay" id="filterModal" onclick="bgClose(event,'filterModal')">
     <div class="sheet">
@@ -354,15 +414,21 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 function todayStr(){return new Date().toISOString().slice(0,10)}
 function fmtDay(s){if(!s)return'—';try{const d=new Date(s);if(isNaN(d))return s;return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`}catch{return s}}
 function dateToISO(jpDate){return jpDate.replace(/\//g,'-')} // 2026/4/1 → 2026-04-01
+function yen(n){return'¥'+Number(n||0).toLocaleString()}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
 /* ═══ STATE ═══ */
 const STORE='wants_v1';
-let items,U,P;
+const PLAN_STORE='plans_v1';
+let items,plans,U,P;
 let filterStatus='all',filterReg='all',filterCost='all',filterTags=[],sortKey='reg',editingId=null;
 let addDesire=0,editDesire=0,addCost='',editCost='';
 let addTags=[],editTags=[];
 let addImgData='',editImgData='';
 let addPeriodMode='single',editPeriodMode='single';
+let currentDetailId=null;
+let planEditingWantsId=null,planEditingExistingId=null;
+let plSchedule=[],plItems=[],plExpenses=[],plShopping=[],plTodo=[];
 
 /* ═══ MIGRATION ═══ */
 function migrateItem(w){
@@ -371,6 +437,9 @@ function migrateItem(w){
   if(m[r.cost])r.cost=m[r.cost];
   return r;
 }
+function migratePlan(p){
+  return {schedule:[],items:[],expenses:[],shoppingList:[],todoList:[],memo:'',reservation:'',title:'',date:'',url:'',...p};
+}
 
 /* ═══ INIT ═══ */
 async function init(){
@@ -378,10 +447,10 @@ async function init(){
   U=currentUser(); P=getAccount(partnerId());
   applyTheme(U.theme);
   document.getElementById('nav').innerHTML=navHTML('wants');
-  // wants画面を開いたら既読にする
   markAllNotifsRead();
-  await syncOnLoad(['wants','accounts']);
+  await syncOnLoad(['wants','plans','accounts']);
   try{const s=JSON.parse(localStorage.getItem(STORE));items=(Array.isArray(s)&&s.length)?s.map(migrateItem):sampleItems()}catch{items=sampleItems()}
+  try{const s=JSON.parse(localStorage.getItem(PLAN_STORE));plans=Array.isArray(s)?s.map(migratePlan):[]}catch{plans=[]}
   autoDelete(); applyFilterUI(); render();
 }
 
@@ -398,12 +467,24 @@ async function persist(notifMsg){
   await syncOnSave('wants',items);
   if(notifMsg) addNotif(notifMsg);
 }
+async function persistPlans(){
+  localStorage.setItem(PLAN_STORE,JSON.stringify(plans));
+  await syncOnSave('plans',plans);
+}
 function autoDelete(){
   const y3=3*365*24*60*60*1000,now=Date.now(),b=items.length;
   items=items.filter(w=>{if(w.status!=='done'||!w.doneDate)return true;return now-new Date(w.doneDate).getTime()<y3});
-  if(items.length!==b)persist();
+  if(items.length!==b){
+    // やりたいこと削除に連動して紐づく計画書も削除
+    const remainIds=new Set(items.map(w=>w.id));
+    const pb=plans.length;
+    plans=plans.filter(p=>remainIds.has(p.wantsId));
+    persist();
+    if(plans.length!==pb)persistPlans();
+  }
 }
 function getAllTags(){const s=new Set();items.forEach(w=>(w.tags||[]).forEach(t=>s.add(t)));return[...s].sort()}
+function getPlanByWantsId(wid){return plans.find(p=>p.wantsId===wid)}
 
 /* ═══ RENDER ═══ */
 function render(){
@@ -414,7 +495,6 @@ function render(){
     if(filterStatus!=='all'&&w.status!==filterStatus)return false;
     if(filterReg!=='all'&&w.registrar!==filterReg)return false;
     if(filterCost!=='all'&&w.cost!==filterCost)return false;
-    // タグ複数選択AND絞り込み
     if(filterTags.length>0&&!filterTags.every(t=>(w.tags||[]).includes(t)))return false;
     return true;
   });
@@ -432,19 +512,20 @@ function render(){
   const aCount=items.filter(w=>w.registrar===U.id).length,bCount=items.filter(w=>w.registrar===P.id).length;
 
   const row=w=>{
-    const tagHtml=(w.tags||[]).map(t=>`<span class="c-tag">#${t}</span>`).join('');
+    const tagHtml=(w.tags||[]).map(t=>`<span class="c-tag">#${esc(t)}</span>`).join('');
     const myD=U.id===w.registrar?(w.desire||0):(w.desireB||0);
     const desireStr=myD>0?'💗'.repeat(myD):'';
     const costStr=w.cost?'⭐'.repeat(Number(w.cost)):'';
     const imgH=w.imgSize||120;
+    const hasPlan=!!getPlanByWantsId(w.id);
     return `<div class="c-row" onclick="openDetail('${w.id}')">
       <div class="c-thumb" style="width:${Math.round(imgH*0.6)}px;min-height:${imgH}px">
         ${w.image?`<img src="${w.image}" loading="lazy" style="min-height:${imgH}px"/>`:`<div class="c-thumb-empty" style="min-height:${imgH}px">🗂️</div>`}
       </div>
       <div class="c-body">
         <div class="c-main">
-          <div class="c-title">${w.title}</div>
-          <div class="c-sub">${accountIcon(w.registrar)} ${accountName(w.registrar)}${w.period?' · '+w.period:''}</div>
+          <div class="c-title">${esc(w.title)}${hasPlan?' 📝':''}</div>
+          <div class="c-sub">${accountIcon(w.registrar)} ${esc(accountName(w.registrar))}${w.period?' · '+esc(w.period):''}</div>
           ${tagHtml?`<div class="c-tags">${tagHtml}</div>`:''}
           <div class="c-meta">
             ${desireStr?`<span style="font-size:12px">${desireStr}</span>`:''}
@@ -492,7 +573,7 @@ function renderTags(mode){
   const wrap=document.getElementById(wrapId);
   const inp=document.getElementById(inputId);
   const dd=document.getElementById(ddId);
-  const chips=tags.map((t,i)=>`<span class="tag-chip">#${t}<span class="tag-chip-del" onclick="removeTag('${mode}',${i})">✕</span></span>`).join('');
+  const chips=tags.map((t,i)=>`<span class="tag-chip">#${esc(t)}<span class="tag-chip-del" onclick="removeTag('${mode}',${i})">✕</span></span>`).join('');
   wrap.innerHTML=chips;
   wrap.appendChild(inp);
   wrap.appendChild(dd);
@@ -519,7 +600,7 @@ function showTagDD(mode,val){
   const cur=mode==='add'?addTags:editTags;
   const all=getAllTags().filter(t=>t.toLowerCase().includes((val||'').toLowerCase())&&!cur.includes(t));
   if(!all.length){dd.classList.remove('open');return}
-  dd.innerHTML=all.map(t=>`<div class="tag-dd-item" onmousedown="pickTag('${mode}','${t}')">#${t}</div>`).join('');
+  dd.innerHTML=all.map(t=>`<div class="tag-dd-item" onmousedown="pickTag('${mode}','${t}')">#${esc(t)}</div>`).join('');
   dd.classList.add('open');
 }
 function hideTagDD(mode){document.getElementById(mode==='add'?'addTagDD':'editTagDD').classList.remove('open')}
@@ -532,7 +613,6 @@ function renderPeriodInputs(mode,periodStr){
   const m=isAdd?addPeriodMode:editPeriodMode;
 
   if(m==='single'){
-    // 1日のみ
     let dateVal='';
     if(periodStr&&!periodStr.includes('〜')){
       dateVal=dateToISO(periodStr).replace(/\//g,'-');
@@ -542,7 +622,6 @@ function renderPeriodInputs(mode,periodStr){
       <button class="period-toggle-btn" onclick="togglePeriodMode('${mode}')" title="期間に切替">＋</button>
     </div>`;
   } else {
-    // 期間
     let s='',e='';
     if(periodStr&&periodStr.includes('〜')){
       const parts=periodStr.split('〜');
@@ -673,33 +752,34 @@ function submitAdd(){
 /* ═══ DETAIL ═══ */
 function openDetail(id){
   const w=items.find(x=>x.id===id);if(!w)return;
-  editingId=id;
-  const tagHtml=(w.tags||[]).map(t=>`<span class="det-tag">#${t}</span>`).join('');
+  editingId=id;currentDetailId=id;
+  const tagHtml=(w.tags||[]).map(t=>`<span class="det-tag">#${esc(t)}</span>`).join('');
   const costStr=w.cost?'⭐'.repeat(Number(w.cost)):'';
-  // 自分・相手のやりたい度
   const myD=U.id===w.registrar?(w.desire||0):(w.desireB||0);
   const ptD=U.id===w.registrar?(w.desireB||0):(w.desire||0);
 
   document.getElementById('detBody').innerHTML=`
     ${w.image?`<img class="det-hero" src="${w.image}" style="max-height:${w.imgSize||120}px"/>`:''}
-    <div class="det-title">${w.title}</div>
+    <div class="det-title">${esc(w.title)}</div>
     ${tagHtml?`<div class="det-tags">${tagHtml}</div>`:''}
     <div class="det-row"><span class="det-k">ステータス</span><span class="det-v">${w.status==='done'?'✅ 実行済み':'⏳ 未実行'}</span></div>
     <div class="det-row">
       <span class="det-k">やりたい度</span>
       <div class="desire-both">
-        <div class="desire-both-row"><span class="desire-both-lbl">${iconHTML(U.icon,12)} ${U.name}</span><span>${'💗'.repeat(myD)||'—'}</span></div>
-        <div class="desire-both-row"><span class="desire-both-lbl">${iconHTML(P.icon,12)} ${P.name}</span><span>${'💗'.repeat(ptD)||'—'}</span></div>
+        <div class="desire-both-row"><span class="desire-both-lbl">${iconHTML(U.icon,12)} ${esc(U.name)}</span><span>${'💗'.repeat(myD)||'—'}</span></div>
+        <div class="desire-both-row"><span class="desire-both-lbl">${iconHTML(P.icon,12)} ${esc(P.name)}</span><span>${'💗'.repeat(ptD)||'—'}</span></div>
       </div>
     </div>
     ${costStr?`<div class="det-row"><span class="det-k">行動コスト</span><span class="det-v">${costStr}</span></div>`:''}
-    <div class="det-row"><span class="det-k">登録者</span><span class="det-v">${accountIcon(w.registrar)} ${accountName(w.registrar)}</span></div>
+    <div class="det-row"><span class="det-k">登録者</span><span class="det-v">${accountIcon(w.registrar)} ${esc(accountName(w.registrar))}</span></div>
     <div class="det-row"><span class="det-k">登録日</span><span class="det-v">${fmtDay(w.regDate)}</span></div>
     ${w.doneDate?`<div class="det-row"><span class="det-k">実行日</span><span class="det-v">${fmtDay(w.doneDate)}</span></div>`:''}
-    ${w.period?`<div class="det-row"><span class="det-k">イベント日付</span><span class="det-v">${w.period}</span></div>`:''}
-    ${w.url?`<div class="det-row"><span class="det-k">URL</span><span class="det-v"><a href="${w.url}" target="_blank">${w.url}</a></span></div>`:''}
-    ${w.map?`<div class="det-row"><span class="det-k">マップ</span><span class="det-v"><a href="${w.map}" target="_blank">📍 地図を開く</a></span></div>`:''}
-    ${w.memo?`<div class="det-row"><span class="det-k">メモ</span><span class="det-v">${w.memo}</span></div>`:''}`;
+    ${w.period?`<div class="det-row"><span class="det-k">イベント日付</span><span class="det-v">${esc(w.period)}</span></div>`:''}
+    ${w.url?`<div class="det-row"><span class="det-k">URL</span><span class="det-v"><a href="${esc(w.url)}" target="_blank">${esc(w.url)}</a></span></div>`:''}
+    ${w.map?`<div class="det-row"><span class="det-k">マップ</span><span class="det-v"><a href="${esc(w.map)}" target="_blank">📍 地図を開く</a></span></div>`:''}
+    ${w.memo?`<div class="det-row"><span class="det-k">メモ</span><span class="det-v">${esc(w.memo)}</span></div>`:''}`;
+
+  renderPlanSection(id);
 
   const toggleBtn=document.getElementById('toggleBtn');
   if(w.status==='done'){
@@ -709,11 +789,183 @@ function openDetail(id){
     toggleBtn.textContent='✅ 実行済みにする';toggleBtn.className='ok-btn green';
     toggleBtn.onclick=()=>{w.status='done';w.doneDate=todayStr();persist(`${U.name}が「${w.title}」を実行済みにしました`);closeM('detModal');render()};
   }
-  document.getElementById('delBtn').onclick=()=>{if(!confirm('削除しますか？'))return;items=items.filter(x=>x.id!==id);persist();closeM('detModal');render()};
+  document.getElementById('delBtn').onclick=()=>{
+    if(!confirm('削除しますか？\n（紐づく計画書も削除されます）'))return;
+    items=items.filter(x=>x.id!==id);
+    plans=plans.filter(p=>p.wantsId!==id);
+    persist();persistPlans();closeM('detModal');render();
+  };
   openM('detModal');
 }
 
-/* ═══ EDIT ═══ */
+/* ═══ 計画書セクション（詳細モーダル内に埋め込み） ═══ */
+function renderPlanSection(wantsId){
+  const w=items.find(x=>x.id===wantsId);
+  const plan=getPlanByWantsId(wantsId);
+  const el=document.getElementById('planSection');
+
+  if(!plan){
+    el.innerHTML=`<div class="plan-section">
+      <div class="plan-empty-box">
+        <div class="plan-empty-txt">📝 この予定の計画書はまだありません</div>
+        <button type="button" class="plan-create-btn" onclick="openPlanEditor('${wantsId}')">計画書を作成する</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  const schedHtml=(plan.schedule||[]).length
+    ? plan.schedule.map(s=>`<div class="plan-sched-item"><span class="plan-sched-time">${esc(s.time||'')}</span><span class="plan-sched-text">${esc(s.text||'')}</span></div>`).join('')
+    : '<div style="font-size:12px;color:var(--muted)">未設定</div>';
+
+  const checklistHtml=(arr)=> (arr||[]).length
+    ? arr.map((it,i)=>`<div class="plan-check-item${it.checked?' checked':''}"><input type="checkbox" ${it.checked?'checked':''} onchange="togglePlanCheck('${plan.id}','${arrKeyOf(arr,plan)}',${i})"/><span class="plan-check-text">${esc(it.text||'')}</span></div>`).join('')
+    : '<div style="font-size:12px;color:var(--muted)">未設定</div>';
+
+  const expensesTotal=(plan.expenses||[]).reduce((s,e)=>s+(Number(e.amount)||0),0);
+  const expensesHtml=(plan.expenses||[]).length
+    ? plan.expenses.map(e=>`<div class="plan-expense-item"><span>${esc(e.name||'')}</span><span>${yen(e.amount)}</span></div>`).join('')+`<div class="plan-expense-total"><span>合計</span><span>${yen(expensesTotal)}</span></div>`
+    : '<div style="font-size:12px;color:var(--muted)">未設定</div>';
+
+  el.innerHTML=`<div class="plan-section">
+    <div class="plan-hdr">
+      <span class="plan-hdr-title">📝 計画書</span>
+      <button type="button" class="plan-edit-btn" onclick="openPlanEditor('${wantsId}')">✏️ 編集</button>
+    </div>
+    ${plan.date?`<div class="det-row"><span class="det-k">日付</span><span class="det-v">${esc(plan.date)}</span></div>`:''}
+    ${plan.url?`<div class="det-row"><span class="det-k">URL</span><span class="det-v"><a href="${esc(plan.url)}" target="_blank">${esc(plan.url)}</a></span></div>`:''}
+    <div class="plan-block"><div class="plan-block-lbl">スケジュール表</div>${schedHtml}</div>
+    <div class="plan-block"><div class="plan-block-lbl">もちもの</div>${checklistHtml(plan.items)}</div>
+    <div class="plan-block"><div class="plan-block-lbl">出費</div>${expensesHtml}</div>
+    <div class="plan-block"><div class="plan-block-lbl">買い出しリスト</div>${checklistHtml(plan.shoppingList)}</div>
+    <div class="plan-block"><div class="plan-block-lbl">予約内容</div><div class="plan-text-box">${plan.reservation?esc(plan.reservation):'<span style="color:var(--muted);font-size:12px">未設定</span>'}</div></div>
+    <div class="plan-block"><div class="plan-block-lbl">やることリスト</div>${checklistHtml(plan.todoList)}</div>
+    <div class="plan-block"><div class="plan-block-lbl">メモ</div><div class="plan-text-box">${plan.memo?esc(plan.memo):'<span style="color:var(--muted);font-size:12px">未設定</span>'}</div></div>
+    <button type="button" class="plan-del-btn" onclick="deletePlan('${plan.id}')">🗑 計画書を削除する</button>
+  </div>`;
+}
+function arrKeyOf(arr,plan){
+  if(arr===plan.items)return'items';
+  if(arr===plan.shoppingList)return'shoppingList';
+  if(arr===plan.todoList)return'todoList';
+  return'items';
+}
+function togglePlanCheck(planId,key,idx){
+  const plan=plans.find(p=>p.id===planId);if(!plan)return;
+  plan[key][idx].checked=!plan[key][idx].checked;
+  plan.updatedAt=new Date().toISOString();
+  persistPlans();renderPlanSection(plan.wantsId);
+}
+function deletePlan(planId){
+  if(!confirm('計画書を削除しますか？'))return;
+  const plan=plans.find(p=>p.id===planId);if(!plan)return;
+  const wid=plan.wantsId;
+  plans=plans.filter(p=>p.id!==planId);
+  persistPlans();renderPlanSection(wid);
+}
+
+/* ═══ 計画書 作成/編集フォーム ═══ */
+function openPlanEditor(wantsId){
+  const w=items.find(x=>x.id===wantsId);if(!w)return;
+  planEditingWantsId=wantsId;
+  const existing=getPlanByWantsId(wantsId);
+  planEditingExistingId=existing?existing.id:null;
+
+  document.getElementById('planModalTitle').textContent=existing?'計画書を編集':'計画書を作成';
+  document.getElementById('pl-title').value=existing?existing.title:w.title;
+  document.getElementById('pl-date').value=existing?existing.date:(w.period||'');
+  document.getElementById('pl-url').value=existing?existing.url:(w.url||'');
+  document.getElementById('pl-reservation').value=existing?existing.reservation:'';
+  document.getElementById('pl-memo').value=existing?existing.memo:'';
+
+  plSchedule=existing?JSON.parse(JSON.stringify(existing.schedule||[])):[];
+  plItems=existing?JSON.parse(JSON.stringify(existing.items||[])):[];
+  plExpenses=existing?JSON.parse(JSON.stringify(existing.expenses||[])):[];
+  plShopping=existing?JSON.parse(JSON.stringify(existing.shoppingList||[])):[];
+  plTodo=existing?JSON.parse(JSON.stringify(existing.todoList||[])):[];
+
+  renderScheduleEditor();
+  renderChecklistEditor('items',plItems);
+  renderExpenseEditor();
+  renderChecklistEditor('shoppingList',plShopping);
+  renderChecklistEditor('todoList',plTodo);
+
+  closeM('detModal');
+  openM('planModal');
+}
+
+function renderScheduleEditor(){
+  const el=document.getElementById('pl-schedule-list');
+  el.innerHTML=plSchedule.map((s,i)=>`<div class="plan-list-row">
+    <input type="time" value="${esc(s.time||'')}" onchange="plSchedule[${i}].time=this.value"/>
+    <input type="text" placeholder="内容" value="${esc(s.text||'')}" oninput="plSchedule[${i}].text=this.value"/>
+    <button type="button" class="plan-row-del" onclick="removeScheduleRow(${i})">✕</button>
+  </div>`).join('');
+}
+function addScheduleRow(){plSchedule.push({time:'',text:''});renderScheduleEditor();}
+function removeScheduleRow(i){plSchedule.splice(i,1);renderScheduleEditor();}
+
+function renderChecklistEditor(key,arr){
+  const elId=key==='items'?'pl-items-list':key==='shoppingList'?'pl-shopping-list':'pl-todo-list';
+  const el=document.getElementById(elId);
+  el.innerHTML=arr.map((it,i)=>`<div class="plan-list-row">
+    <input type="text" placeholder="項目名" value="${esc(it.text||'')}" oninput="updateChecklistText('${key}',${i},this.value)"/>
+    <button type="button" class="plan-row-del" onclick="removeChecklistRow('${key}',${i})">✕</button>
+  </div>`).join('');
+}
+function getChecklistArr(key){return key==='items'?plItems:key==='shoppingList'?plShopping:plTodo;}
+function addChecklistRow(key){getChecklistArr(key).push({text:'',checked:false});renderChecklistEditor(key,getChecklistArr(key));}
+function removeChecklistRow(key,i){getChecklistArr(key).splice(i,1);renderChecklistEditor(key,getChecklistArr(key));}
+function updateChecklistText(key,i,val){getChecklistArr(key)[i].text=val;}
+
+function renderExpenseEditor(){
+  const el=document.getElementById('pl-expenses-list');
+  el.innerHTML=plExpenses.map((e,i)=>`<div class="plan-list-row">
+    <input type="text" placeholder="項目名" value="${esc(e.name||'')}" oninput="plExpenses[${i}].name=this.value"/>
+    <input type="number" placeholder="0" min="0" value="${e.amount||''}" oninput="plExpenses[${i}].amount=Number(this.value)||0;updateExpenseTotal()"/>
+    <button type="button" class="plan-row-del" onclick="removeExpenseRow(${i})">✕</button>
+  </div>`).join('');
+  updateExpenseTotal();
+}
+function addExpenseRow(){plExpenses.push({name:'',amount:0});renderExpenseEditor();}
+function removeExpenseRow(i){plExpenses.splice(i,1);renderExpenseEditor();}
+function updateExpenseTotal(){
+  const total=plExpenses.reduce((s,e)=>s+(Number(e.amount)||0),0);
+  document.getElementById('pl-expense-total').textContent=yen(total);
+}
+
+function submitPlan(){
+  const title=document.getElementById('pl-title').value.trim();
+  if(!title){alert('タイトルを入力してください');return}
+  const now=new Date().toISOString();
+  const data={
+    id:planEditingExistingId||uid(),
+    wantsId:planEditingWantsId,
+    title,
+    date:document.getElementById('pl-date').value.trim(),
+    url:document.getElementById('pl-url').value.trim(),
+    schedule:plSchedule.filter(s=>s.time||s.text),
+    items:plItems.filter(i=>i.text),
+    expenses:plExpenses.filter(e=>e.name),
+    shoppingList:plShopping.filter(i=>i.text),
+    reservation:document.getElementById('pl-reservation').value.trim(),
+    todoList:plTodo.filter(i=>i.text),
+    memo:document.getElementById('pl-memo').value.trim(),
+    createdAt:planEditingExistingId?(getPlanByWantsId(planEditingWantsId)?.createdAt||now):now,
+    updatedAt:now,
+  };
+  if(planEditingExistingId){
+    const idx=plans.findIndex(p=>p.id===planEditingExistingId);
+    if(idx>=0)plans[idx]=data; else plans.push(data);
+  } else {
+    plans.push(data);
+  }
+  persistPlans();
+  closeM('planModal');
+  openDetail(planEditingWantsId);
+}
+
+/* ═══ EDIT (やりたいこと本体) ═══ */
 function openEdit(){
   const w=items.find(x=>x.id===editingId);if(!w)return;
   document.getElementById('e-title').value=w.title||'';
@@ -724,7 +976,6 @@ function openEdit(){
   document.getElementById('e-doneDateRow').style.display=w.status==='done'?'flex':'none';
 
   editTags=[...(w.tags||[])];
-  // 自分のやりたい度のみ編集可能
   const myD=U.id===w.registrar?(w.desire||0):(w.desireB||0);
   editCost=w.cost||'';editImgData=w.image||'';
   editPeriodMode=w.period?.includes('〜')?'range':'single';
@@ -754,7 +1005,6 @@ function submitEdit(){
   w.map=document.getElementById('e-map').value.trim();
   w.memo=document.getElementById('e-memo').value.trim();
   w.tags=[...editTags];w.cost=editCost;w.image=editImgData;w.imgSize=imgSize;
-  // 自分のやりたい度のみ更新
   if(U.id===w.registrar)w.desire=editDesire; else w.desireB=editDesire;
   if(w.status==='done')w.doneDate=document.getElementById('e-donedate').value||w.doneDate;
   persist();closeM('editModal');render();
@@ -765,7 +1015,7 @@ function openFilter(){
   const allTags=getAllTags();
   const tagBtns=document.getElementById('fil-tag-btns');
   tagBtns.innerHTML=allTags.length
-    ? allTags.map(t=>`<button class="fil-tag-btn ${filterTags.includes(t)?'fil-tag-on':'fil-tag-off'}" onclick="toggleTagFilter('${t}')">#${t}</button>`).join('')
+    ? allTags.map(t=>`<button class="fil-tag-btn ${filterTags.includes(t)?'fil-tag-on':'fil-tag-off'}" onclick="toggleTagFilter('${t}')">#${esc(t)}</button>`).join('')
     : '<span style="font-size:12px;color:var(--muted)">タグなし</span>';
   applyFilterUI();openM('filterModal');
 }
@@ -783,8 +1033,8 @@ function applyFilterUI(){
   document.getElementById('fil-done').className='tgl '+(filterStatus==='done'?'tgl-green':'tgl-off');
   document.getElementById('fil-reg-btns').innerHTML=`
     <button class="tgl ${filterReg==='all'?'tgl-accent':'tgl-off'}" onclick="setRegFilter('all')">全て</button>
-    <button class="tgl ${filterReg===U.id?'tgl-accent':'tgl-off'}" onclick="setRegFilter('${U.id}')">${U.icon} ${U.name}</button>
-    <button class="tgl ${filterReg===P.id?'tgl-accent':'tgl-off'}" onclick="setRegFilter('${P.id}')">${P.icon} ${P.name}</button>`;
+    <button class="tgl ${filterReg===U.id?'tgl-accent':'tgl-off'}" onclick="setRegFilter('${U.id}')">${U.icon} ${esc(U.name)}</button>
+    <button class="tgl ${filterReg===P.id?'tgl-accent':'tgl-off'}" onclick="setRegFilter('${P.id}')">${P.icon} ${esc(P.name)}</button>`;
   ['all','1','2','3'].forEach(k=>{const el=document.getElementById('fil-cost-'+k);if(el)el.className='tgl '+(filterCost===k?'tgl-accent':'tgl-off')});
   document.getElementById('sort-reg').className='tgl '+(sortKey==='reg'?'tgl-accent':'tgl-off');
   document.getElementById('sort-done').className='tgl '+(sortKey==='done'?'tgl-accent':'tgl-off');

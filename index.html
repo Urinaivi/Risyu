@@ -81,7 +81,7 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
     <div>
       <div class="hdr-greeting" id="greeting"></div>
       <div class="hdr-title">Risyu 💗</div>
-      <small style="font-size:10px;color:var(--muted)">version.1.0</small>
+      <small style="font-size:10px;color:var(--muted)">version.2.0</small>
       <div class="hdr-date" id="todayDate"></div>
     </div>
     <div class="hdr-right">
@@ -101,10 +101,6 @@ function yen(n){return'¥'+Number(n).toLocaleString()}
 function todayStr(){return new Date().toISOString().slice(0,10)}
 function loadPayments(){try{const d=JSON.parse(localStorage.getItem('pay_v1'));return Array.isArray(d)?d:[]}catch{return[]}}
 function loadWants(){try{const d=JSON.parse(localStorage.getItem('wants_v1'));return Array.isArray(d)?d:[]}catch{return[]}}
-function loadStamp(){
-  const u=currentUser();
-  try{const d=JSON.parse(localStorage.getItem('stamp_v1_'+u.id));return(d&&Array.isArray(d.cards))?d:{cards:[{cells:Array(30).fill(false),stampDates:Array(30).fill(null),completed:false}]}}catch{return{cards:[{cells:Array(30).fill(false),stampDates:Array(30).fill(null),completed:false}]}}
-}
 function fmtTimeAgo(iso){
   const diff=Date.now()-new Date(iso).getTime();
   const m=Math.floor(diff/60000);
@@ -121,7 +117,13 @@ function init(){
   document.getElementById('userName').textContent=u.name;
   document.getElementById('nav').innerHTML=navHTML('home');
   renderHeader();render();
+  syncAndRerender();
   setInterval(()=>{renderHeader();render();},60000);
+}
+
+async function syncAndRerender(){
+  await syncOnLoad(['payments','wants','accounts']);
+  render();
 }
 
 function renderHeader(){
@@ -135,29 +137,21 @@ function renderHeader(){
 function doRefresh(){
   const btn=document.getElementById('refreshBtn');
   btn.classList.add('spin');setTimeout(()=>btn.classList.remove('spin'),500);
-  renderHeader();render();
+  renderHeader();syncAndRerender();
 }
 
 function render(){
-  const pays=loadPayments(),wants=loadWants(),stamp=loadStamp();
+  const pays=loadPayments(),wants=loadWants();
   const u=currentUser(),p=getAccount(partnerId());
   const unMe=pays.filter(x=>x.who===u.id&&(x.status==='unpaid'||x.status==='partial')).reduce((s,x)=>s+x.amount,0);
   const unPt=pays.filter(x=>x.who===p.id&&(x.status==='unpaid'||x.status==='partial')).reduce((s,x)=>s+x.amount,0);
   const diff=unPt-unMe,diffAbs=Math.abs(diff);
   const diffDesc=diff>0?`${p.name}が ${yen(diffAbs)} 多く払うべき状態`:diff<0?`${u.name}が ${yen(diffAbs)} 多く払うべき状態`:'お互いの支払いは釣り合っています ✨';
   const wTotal=wants.length,wDone=wants.filter(w=>w.status==='done').length,wPending=wants.filter(w=>w.status==='pending').length,wPct=wTotal?Math.round(wDone/wTotal*100):0;
-  const lc=stamp.cards[stamp.cards.length-1];
-  const sStamped=lc?lc.cells.filter(Boolean).length:0;
-  // スタンプ今日判定（06:00基準）
-  const nowH=new Date().getHours();
-  const todayKey=nowH<6?new Date(Date.now()-86400000).toISOString().slice(0,10):todayStr();
-  const sTodayDone=lc?(lc.stampDays||[]).some(d=>d===todayKey)||lc.stampDates.some(d=>{if(!d)return false;const dt=new Date(d);const h=dt.getHours();const k=h<6?new Date(dt.setDate(dt.getDate()-1)).toISOString().slice(0,10):d.slice(0,10);return k===todayKey}):false;
-  const sComp=lc?.completed||false,sPct=Math.round(sStamped/30*100);
 
   // お知らせ
-  const sysNotices=buildSysNotices(pays,wants,lc,sTodayDone,sComp,u,p);
+  const sysNotices=buildSysNotices(pays,wants,u,p);
   const wantsNotifs=getNotifs().slice(0,5);
-  const hasUnread=getUnreadCount()>0;
 
   // 期限が2ヶ月以内のやりたいこと
   const today=new Date();today.setHours(0,0,0,0);
@@ -179,8 +173,7 @@ function render(){
       </div>
     </div>
     <div class="grid2 section-anim">
-      <div class="stat-card"><span class="stat-icon">📋</span><div class="stat-label">やりたいこと</div><div class="stat-value">${wPending}<span style="font-size:13px;font-weight:400;color:var(--sub)"> 件</span></div><div class="stat-sub">実行済み ${wDone} / 全 ${wTotal} 件</div><div class="stat-bar-wrap"><div class="stat-bar-fill" style="width:${wPct}%;background:linear-gradient(90deg,var(--green),#86efac)"></div></div></div>
-      <div class="stat-card"><span class="stat-icon">🔖</span><div class="stat-label">スタンプカード</div><div class="stat-value">${sStamped}<span style="font-size:13px;font-weight:400;color:var(--sub)"> / 30</span></div><div class="stat-sub">${sComp?'✨ コンプリート済み':sTodayDone?'✅ 今日は押した':'⏳ 今日未スタンプ'}</div><div class="stat-bar-wrap"><div class="stat-bar-fill" style="width:${sPct}%;background:linear-gradient(90deg,var(--pink),#fb923c)"></div></div></div>
+      <div class="stat-card" style="grid-column:1 / -1"><span class="stat-icon">📋</span><div class="stat-label">やりたいこと</div><div class="stat-value">${wPending}<span style="font-size:13px;font-weight:400;color:var(--sub)"> 件</span></div><div class="stat-sub">実行済み ${wDone} / 全 ${wTotal} 件</div><div class="stat-bar-wrap"><div class="stat-bar-fill" style="width:${wPct}%;background:linear-gradient(90deg,var(--green),#86efac)"></div></div></div>
     </div>
     ${sysNotices.length||wantsNotifs.length?`
     <div class="sec-lbl section-anim">🔔 お知らせ</div>
@@ -193,13 +186,12 @@ function render(){
     <div style="height:6px"></div>`;
 }
 
-function buildSysNotices(pays,wants,lc,sTodayDone,sComp,u,p){
+function buildSysNotices(pays,wants,u,p){
   const notices=[],today=new Date();today.setHours(0,0,0,0);
   const unMe=pays.filter(x=>x.who===u.id&&(x.status==='unpaid'||x.status==='partial')).reduce((s,x)=>s+x.amount,0);
   const unPt=pays.filter(x=>x.who===p.id&&(x.status==='unpaid'||x.status==='partial')).reduce((s,x)=>s+x.amount,0);
   if(unMe>0)notices.push({dot:'nd-red',title:`${u.name}の未払いが ${yen(unMe)} あります`,sub:'支払い管理から確認',screen:'pay'});
   if(unPt>0)notices.push({dot:'nd-orange',title:`${p.name}の未払いが ${yen(unPt)} あります`,sub:'支払い管理から確認',screen:'pay'});
-  if(!sComp&&!sTodayDone&&lc){const r=30-lc.cells.filter(Boolean).length;notices.push({dot:'nd-purple',title:'今日のスタンプがまだ押せます',sub:`残り ${r} マス`,screen:'stamp'})}
   wants.filter(w=>w.status==='pending'&&w.period).forEach(w=>{const e=parseEnd(w.period);if(!e)return;const days=Math.ceil((e-today)/86400000);if(days>=0&&days<=3)notices.push({dot:days===0?'nd-red':'nd-blue',title:`「${w.title}」の期限まであと ${days===0?'今日！':days+'日'}`,sub:w.period,screen:'wants'})});
   return notices;
 }
@@ -213,7 +205,7 @@ function parseEnd(period){
   if(!m||m.length<2)return null;
   const d=new Date(m[1].replace(/\//g,'-'));return isNaN(d)?null:d;
 }
-function goTo(s){const m={pay:'01_payment.html',wants:'02_wants.html',stamp:'03_stamp.html',bingo:'04_bingo.html',mypage:'mypage.html'};if(m[s])location.href=m[s]}
+function goTo(s){const m={pay:'01_payment.html',wants:'02_wants.html',mypage:'mypage.html'};if(m[s])location.href=m[s]}
 
 init();
 </script>
