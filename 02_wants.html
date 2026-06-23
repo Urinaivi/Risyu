@@ -16,6 +16,8 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .hdr-acts{display:flex;gap:6px}
 .hdr-btn{width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;background:none;display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--sub);transition:background .15s}
 .hdr-btn:active{background:var(--border)}
+.hdr-btn.spin{animation:spin .5s ease}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .search-wrap{padding:4px 14px 10px;flex-shrink:0}
 .search-box{background:var(--card);border-radius:12px;display:flex;align-items:center;gap:8px;padding:10px 14px}
 .search-box input{flex:1;border:none;outline:none;font-size:14px;font-family:'Noto Sans JP',sans-serif;color:var(--text);background:transparent}
@@ -115,6 +117,7 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
 .ok-btn:active{opacity:.82;transform:scale(.98)}
 .ok-btn.green{background:var(--green)}
 .ok-btn.orange{background:var(--orange)}
+.ok-btn:disabled{opacity:.5}
 .del-btn{display:block;width:calc(100% - 28px);margin:4px 14px 22px;padding:13px;background:#ffe5e4;color:var(--red);border:none;border-radius:var(--r);font-size:15px;font-weight:600;font-family:'Noto Sans JP',sans-serif;cursor:pointer}
 .det-hero{width:100%;display:block;object-fit:cover;max-height:180px}
 .det-title{font-size:20px;font-weight:700;color:var(--text);padding:12px 16px 8px;line-height:1.4}
@@ -135,7 +138,6 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
 .fil-tag-btn{padding:5px 10px;border-radius:20px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:background .15s}
 .fil-tag-off{background:#e4e4e9;color:var(--sub)}
 .fil-tag-on{background:var(--accent);color:#fff}
-/* ─── 計画書セクション ─── */
 .plan-section{background:var(--card);border-radius:var(--r);margin:8px 14px 0;overflow:hidden}
 .plan-empty-box{padding:20px 16px;text-align:center}
 .plan-empty-txt{font-size:13px;color:var(--sub);margin-bottom:10px}
@@ -155,7 +157,6 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
 .plan-expense-total{display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding-top:8px;border-top:.5px solid var(--border);margin-top:4px}
 .plan-text-box{font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap}
 .plan-del-btn{display:block;width:calc(100% - 32px);margin:4px 16px 16px;padding:11px;background:#ffe5e4;color:var(--red);border:none;border-radius:10px;font-size:13px;font-weight:600;font-family:'Noto Sans JP',sans-serif;cursor:pointer}
-/* 計画書編集フォーム内 */
 .plan-list-edit{padding:8px 16px 4px}
 .plan-list-row{display:flex;gap:6px;align-items:center;margin-bottom:6px}
 .plan-list-row input[type=text]{flex:1;border:.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;font-family:'Noto Sans JP',sans-serif;background:var(--bg);outline:none}
@@ -170,6 +171,7 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
   <div class="hdr">
     <div class="hdr-title">やりたいことリスト</div>
     <div class="hdr-acts">
+      <button class="hdr-btn" id="refreshBtn" onclick="manualRefresh()">🔄</button>
       <button class="hdr-btn" onclick="openFilter()">⚙️</button>
     </div>
   </div>
@@ -242,7 +244,7 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
         <div class="f-row"><span class="f-lbl">登録者</span><span id="addRegLabel" style="font-size:14px;color:var(--sub);margin-left:auto"></span></div>
         <div class="f-row"><span class="f-lbl">ステータス</span><span style="font-size:13px;color:var(--sub);margin-left:auto;background:#e4e4e9;padding:6px 12px;border-radius:10px">未実行（固定）</span></div>
       </div>
-      <button class="ok-btn" onclick="submitAdd()">追加する</button>
+      <button class="ok-btn" id="addSubmitBtn" onclick="submitAdd()">追加する</button>
       <div style="height:8px"></div>
     </div>
   </div>
@@ -318,7 +320,7 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
         </div>
         <div class="f-row" id="e-doneDateRow" style="display:none"><span class="f-lbl">実行日</span><input class="f-inp" type="date" id="e-donedate"/></div>
       </div>
-      <button class="ok-btn" onclick="submitEdit()">保存する</button>
+      <button class="ok-btn" id="editSubmitBtn" onclick="submitEdit()">保存する</button>
       <div style="height:8px"></div>
     </div>
   </div>
@@ -366,7 +368,7 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
       <div class="sec-lbl" style="padding-left:16px">メモ</div>
       <div class="f-card"><div class="f-row" style="align-items:flex-start"><textarea class="f-inp left" id="pl-memo" rows="2" placeholder="任意"></textarea></div></div>
 
-      <button class="ok-btn" onclick="submitPlan()">保存する</button>
+      <button class="ok-btn" id="planSubmitBtn" onclick="submitPlan()">保存する</button>
       <div style="height:8px"></div>
     </div>
   </div>
@@ -413,33 +415,19 @@ textarea.f-inp{text-align:left;resize:none;line-height:1.6;padding:2px 0}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function todayStr(){return new Date().toISOString().slice(0,10)}
 function fmtDay(s){if(!s)return'—';try{const d=new Date(s);if(isNaN(d))return s;return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`}catch{return s}}
-function dateToISO(jpDate){return jpDate.replace(/\//g,'-')} // 2026/4/1 → 2026-04-01
+function dateToISO(jpDate){return jpDate.replace(/\//g,'-')}
 function yen(n){return'¥'+Number(n||0).toLocaleString()}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
 /* ═══ STATE ═══ */
-const STORE='wants_v1';
-const PLAN_STORE='plans_v1';
-let items,plans,U,P;
+let items=[],plans=[],U,P;
 let filterStatus='all',filterReg='all',filterCost='all',filterTags=[],sortKey='reg',editingId=null;
 let addDesire=0,editDesire=0,addCost='',editCost='';
 let addTags=[],editTags=[];
 let addImgData='',editImgData='';
 let addPeriodMode='single',editPeriodMode='single';
-let currentDetailId=null;
 let planEditingWantsId=null,planEditingExistingId=null;
 let plSchedule=[],plItems=[],plExpenses=[],plShopping=[],plTodo=[];
-
-/* ═══ MIGRATION ═══ */
-function migrateItem(w){
-  const r={tags:[],map:'',cost:'',image:'',imgSize:120,desire:0,desireB:0,period:'',url:'',...w};
-  const m={free:'1',low:'1',mid:'2',high:'3'};
-  if(m[r.cost])r.cost=m[r.cost];
-  return r;
-}
-function migratePlan(p){
-  return {schedule:[],items:[],expenses:[],shoppingList:[],todoList:[],memo:'',reservation:'',title:'',date:'',url:'',...p};
-}
 
 /* ═══ INIT ═══ */
 async function init(){
@@ -448,41 +436,22 @@ async function init(){
   applyTheme(U.theme);
   document.getElementById('nav').innerHTML=navHTML('wants');
   markAllNotifsRead();
-  await syncOnLoad(['wants','plans','accounts']);
-  try{const s=JSON.parse(localStorage.getItem(STORE));items=(Array.isArray(s)&&s.length)?s.map(migrateItem):sampleItems()}catch{items=sampleItems()}
-  try{const s=JSON.parse(localStorage.getItem(PLAN_STORE));plans=Array.isArray(s)?s.map(migratePlan):[]}catch{plans=[]}
-  autoDelete(); applyFilterUI(); render();
+
+  document.getElementById('scroll').innerHTML='<div class="empty-row">読み込み中…</div>';
+  [items, plans] = await Promise.all([fetchWants(), fetchPlans()]);
+  applyFilterUI(); render();
 }
 
-function sampleItems(){return[
-  migrateItem({id:uid(),title:'花畑へ行く',regDate:'2026-03-02',period:'2026/4/1〜2026/4/30',url:'',memo:'春限定',registrar:'A',status:'pending',doneDate:null,createdAt:'2026-03-02T00:00'}),
-  migrateItem({id:uid(),title:'水族館デート',regDate:'2026-03-02',period:'',url:'',memo:'',registrar:'B',status:'pending',doneDate:null,createdAt:'2026-03-02T00:00'}),
-]}
+async function manualRefresh(){
+  const btn=document.getElementById('refreshBtn');
+  btn.classList.add('spin');
+  [items, plans] = await Promise.all([fetchWants(), fetchPlans()]);
+  render();
+  setTimeout(()=>btn.classList.remove('spin'),500);
+}
 
 function accountName(id){return id===U.id?U.name:P.name}
 function accountIcon(id){return id===U.id?U.icon:P.icon}
-
-async function persist(notifMsg){
-  localStorage.setItem(STORE,JSON.stringify(items));
-  await syncOnSave('wants',items);
-  if(notifMsg) addNotif(notifMsg);
-}
-async function persistPlans(){
-  localStorage.setItem(PLAN_STORE,JSON.stringify(plans));
-  await syncOnSave('plans',plans);
-}
-function autoDelete(){
-  const y3=3*365*24*60*60*1000,now=Date.now(),b=items.length;
-  items=items.filter(w=>{if(w.status!=='done'||!w.doneDate)return true;return now-new Date(w.doneDate).getTime()<y3});
-  if(items.length!==b){
-    // やりたいこと削除に連動して紐づく計画書も削除
-    const remainIds=new Set(items.map(w=>w.id));
-    const pb=plans.length;
-    plans=plans.filter(p=>remainIds.has(p.wantsId));
-    persist();
-    if(plans.length!==pb)persistPlans();
-  }
-}
 function getAllTags(){const s=new Set();items.forEach(w=>(w.tags||[]).forEach(t=>s.add(t)));return[...s].sort()}
 function getPlanByWantsId(wid){return plans.find(p=>p.wantsId===wid)}
 
@@ -731,12 +700,12 @@ function openAdd(){
   document.getElementById('addImgPreview').style.display='none';
   openM('addModal');
 }
-function submitAdd(){
+async function submitAdd(){
   const title=document.getElementById('f-title').value.trim();
   if(!title){alert('タイトルを入力してください');return}
   const imgSize=Number(document.getElementById('addImgSize')?.value||120);
   const period=getPeriodValue('add');
-  items.push(migrateItem({
+  const newItem={
     id:uid(),title,regDate:todayStr(),period,
     url:document.getElementById('f-url').value.trim(),
     map:document.getElementById('f-map').value.trim(),
@@ -744,15 +713,21 @@ function submitAdd(){
     tags:[...addTags],desire:addDesire,desireB:0,cost:addCost,
     image:addImgData,imgSize,
     registrar:U.id,status:'pending',doneDate:null,createdAt:new Date().toISOString(),
-  }));
-  persist(`${U.name}が「${title}」を追加しました`);
+  };
+  const btn=document.getElementById('addSubmitBtn'); btn.disabled=true;
+  showBusyOverlay('保存中…');
+  const created = await createWants(newItem);
+  hideBusyOverlay(); btn.disabled=false;
+  if(!created){ showErrorToast('保存に失敗しました。通信環境を確認して再度お試しください。'); return; }
+  items.push(created);
+  addNotif(`${U.name}が「${title}」を追加しました`);
   closeM('addModal');render();
 }
 
 /* ═══ DETAIL ═══ */
 function openDetail(id){
   const w=items.find(x=>x.id===id);if(!w)return;
-  editingId=id;currentDetailId=id;
+  editingId=id;
   const tagHtml=(w.tags||[]).map(t=>`<span class="det-tag">#${esc(t)}</span>`).join('');
   const costStr=w.cost?'⭐'.repeat(Number(w.cost)):'';
   const myD=U.id===w.registrar?(w.desire||0):(w.desireB||0);
@@ -784,23 +759,59 @@ function openDetail(id){
   const toggleBtn=document.getElementById('toggleBtn');
   if(w.status==='done'){
     toggleBtn.textContent='↩ 未実行に戻す';toggleBtn.className='ok-btn orange';
-    toggleBtn.onclick=()=>{w.status='pending';w.doneDate=null;persist();closeM('detModal');render()};
+    toggleBtn.onclick=async ()=>{
+      toggleBtn.disabled=true; showBusyOverlay('保存中…');
+      const res=await updateWants(w.id,{status:'pending',doneDate:null},w.updatedAt);
+      hideBusyOverlay(); toggleBtn.disabled=false;
+      if(!res.ok){ await handleConflictOrError(res); closeM('detModal'); render(); return; }
+      const idx=items.findIndex(x=>x.id===w.id); if(idx>=0)items[idx]=res.row;
+      closeM('detModal');render();
+    };
   } else {
     toggleBtn.textContent='✅ 実行済みにする';toggleBtn.className='ok-btn green';
-    toggleBtn.onclick=()=>{w.status='done';w.doneDate=todayStr();persist(`${U.name}が「${w.title}」を実行済みにしました`);closeM('detModal');render()};
+    toggleBtn.onclick=async ()=>{
+      toggleBtn.disabled=true; showBusyOverlay('保存中…');
+      const res=await updateWants(w.id,{status:'done',doneDate:todayStr()},w.updatedAt);
+      hideBusyOverlay(); toggleBtn.disabled=false;
+      if(!res.ok){ await handleConflictOrError(res); closeM('detModal'); render(); return; }
+      const idx=items.findIndex(x=>x.id===w.id); if(idx>=0)items[idx]=res.row;
+      addNotif(`${U.name}が「${w.title}」を実行済みにしました`);
+      closeM('detModal');render();
+    };
   }
-  document.getElementById('delBtn').onclick=()=>{
+  document.getElementById('delBtn').onclick=async ()=>{
     if(!confirm('削除しますか？\n（紐づく計画書も削除されます）'))return;
+    const dbtn=document.getElementById('delBtn'); dbtn.disabled=true;
+    showBusyOverlay('削除中…');
+    const res=await deleteWants(w.id, w.updatedAt);
+    if(!res.ok){
+      hideBusyOverlay(); dbtn.disabled=false;
+      await handleConflictOrError(res); closeM('detModal'); render(); return;
+    }
+    // 紐づく計画書も削除
+    const plan=getPlanByWantsId(w.id);
+    if(plan){
+      const pres=await deletePlan(plan.id, plan.updatedAt);
+      if(pres.ok) plans=plans.filter(p=>p.id!==plan.id);
+    }
+    hideBusyOverlay(); dbtn.disabled=false;
     items=items.filter(x=>x.id!==id);
-    plans=plans.filter(p=>p.wantsId!==id);
-    persist();persistPlans();closeM('detModal');render();
+    closeM('detModal'); render();
   };
   openM('detModal');
 }
 
+async function handleConflictOrError(res){
+  if(res.conflict){
+    showErrorToast('他の端末で更新されたため反映できませんでした。最新の状態を取得します。');
+  } else {
+    showErrorToast('保存に失敗しました。通信環境を確認してください。最新の状態を取得します。');
+  }
+  [items, plans] = await Promise.all([fetchWants(), fetchPlans()]);
+}
+
 /* ═══ 計画書セクション（詳細モーダル内に埋め込み） ═══ */
 function renderPlanSection(wantsId){
-  const w=items.find(x=>x.id===wantsId);
   const plan=getPlanByWantsId(wantsId);
   const el=document.getElementById('planSection');
 
@@ -818,8 +829,8 @@ function renderPlanSection(wantsId){
     ? plan.schedule.map(s=>`<div class="plan-sched-item"><span class="plan-sched-time">${esc(s.time||'')}</span><span class="plan-sched-text">${esc(s.text||'')}</span></div>`).join('')
     : '<div style="font-size:12px;color:var(--muted)">未設定</div>';
 
-  const checklistHtml=(arr)=> (arr||[]).length
-    ? arr.map((it,i)=>`<div class="plan-check-item${it.checked?' checked':''}"><input type="checkbox" ${it.checked?'checked':''} onchange="togglePlanCheck('${plan.id}','${arrKeyOf(arr,plan)}',${i})"/><span class="plan-check-text">${esc(it.text||'')}</span></div>`).join('')
+  const checklistHtml=(arr,key)=> (arr||[]).length
+    ? arr.map((it,i)=>`<div class="plan-check-item${it.checked?' checked':''}"><input type="checkbox" ${it.checked?'checked':''} onchange="togglePlanCheck('${plan.id}','${key}',${i})"/><span class="plan-check-text">${esc(it.text||'')}</span></div>`).join('')
     : '<div style="font-size:12px;color:var(--muted)">未設定</div>';
 
   const expensesTotal=(plan.expenses||[]).reduce((s,e)=>s+(Number(e.amount)||0),0);
@@ -835,33 +846,48 @@ function renderPlanSection(wantsId){
     ${plan.date?`<div class="det-row"><span class="det-k">日付</span><span class="det-v">${esc(plan.date)}</span></div>`:''}
     ${plan.url?`<div class="det-row"><span class="det-k">URL</span><span class="det-v"><a href="${esc(plan.url)}" target="_blank">${esc(plan.url)}</a></span></div>`:''}
     <div class="plan-block"><div class="plan-block-lbl">スケジュール表</div>${schedHtml}</div>
-    <div class="plan-block"><div class="plan-block-lbl">もちもの</div>${checklistHtml(plan.items)}</div>
+    <div class="plan-block"><div class="plan-block-lbl">もちもの</div>${checklistHtml(plan.items,'items')}</div>
     <div class="plan-block"><div class="plan-block-lbl">出費</div>${expensesHtml}</div>
-    <div class="plan-block"><div class="plan-block-lbl">買い出しリスト</div>${checklistHtml(plan.shoppingList)}</div>
+    <div class="plan-block"><div class="plan-block-lbl">買い出しリスト</div>${checklistHtml(plan.shoppingList,'shoppingList')}</div>
     <div class="plan-block"><div class="plan-block-lbl">予約内容</div><div class="plan-text-box">${plan.reservation?esc(plan.reservation):'<span style="color:var(--muted);font-size:12px">未設定</span>'}</div></div>
-    <div class="plan-block"><div class="plan-block-lbl">やることリスト</div>${checklistHtml(plan.todoList)}</div>
+    <div class="plan-block"><div class="plan-block-lbl">やることリスト</div>${checklistHtml(plan.todoList,'todoList')}</div>
     <div class="plan-block"><div class="plan-block-lbl">メモ</div><div class="plan-text-box">${plan.memo?esc(plan.memo):'<span style="color:var(--muted);font-size:12px">未設定</span>'}</div></div>
-    <button type="button" class="plan-del-btn" onclick="deletePlan('${plan.id}')">🗑 計画書を削除する</button>
+    <button type="button" class="plan-del-btn" onclick="deletePlanFromUI('${plan.id}')">🗑 計画書を削除する</button>
   </div>`;
 }
-function arrKeyOf(arr,plan){
-  if(arr===plan.items)return'items';
-  if(arr===plan.shoppingList)return'shoppingList';
-  if(arr===plan.todoList)return'todoList';
-  return'items';
-}
-function togglePlanCheck(planId,key,idx){
+async function togglePlanCheck(planId,key,idx){
   const plan=plans.find(p=>p.id===planId);if(!plan)return;
-  plan[key][idx].checked=!plan[key][idx].checked;
-  plan.updatedAt=new Date().toISOString();
-  persistPlans();renderPlanSection(plan.wantsId);
+  const newArr=JSON.parse(JSON.stringify(plan[key]||[]));
+  newArr[idx].checked=!newArr[idx].checked;
+  showBusyOverlay('保存中…');
+  const res=await updatePlan(planId, {[key]:newArr}, plan.updatedAt);
+  hideBusyOverlay();
+  if(!res.ok){
+    if(res.conflict){ showErrorToast('他の端末で更新されたため反映できませんでした。最新の状態を取得します。'); }
+    else { showErrorToast('保存に失敗しました。'); }
+    plans=await fetchPlans();
+    renderPlanSection(plan.wantsId);
+    return;
+  }
+  const idx2=plans.findIndex(p=>p.id===planId); if(idx2>=0)plans[idx2]=res.row;
+  renderPlanSection(plan.wantsId);
 }
-function deletePlan(planId){
+async function deletePlanFromUI(planId){
   if(!confirm('計画書を削除しますか？'))return;
   const plan=plans.find(p=>p.id===planId);if(!plan)return;
   const wid=plan.wantsId;
+  showBusyOverlay('削除中…');
+  const res=await deletePlan(planId, plan.updatedAt);
+  hideBusyOverlay();
+  if(!res.ok){
+    if(res.conflict){ showErrorToast('他の端末で更新されたため削除できませんでした。最新の状態を取得します。'); }
+    else { showErrorToast('削除に失敗しました。'); }
+    plans=await fetchPlans();
+    renderPlanSection(wid);
+    return;
+  }
   plans=plans.filter(p=>p.id!==planId);
-  persistPlans();renderPlanSection(wid);
+  renderPlanSection(wid);
 }
 
 /* ═══ 計画書 作成/編集フォーム ═══ */
@@ -934,12 +960,10 @@ function updateExpenseTotal(){
   document.getElementById('pl-expense-total').textContent=yen(total);
 }
 
-function submitPlan(){
+async function submitPlan(){
   const title=document.getElementById('pl-title').value.trim();
   if(!title){alert('タイトルを入力してください');return}
-  const now=new Date().toISOString();
   const data={
-    id:planEditingExistingId||uid(),
     wantsId:planEditingWantsId,
     title,
     date:document.getElementById('pl-date').value.trim(),
@@ -951,16 +975,29 @@ function submitPlan(){
     reservation:document.getElementById('pl-reservation').value.trim(),
     todoList:plTodo.filter(i=>i.text),
     memo:document.getElementById('pl-memo').value.trim(),
-    createdAt:planEditingExistingId?(getPlanByWantsId(planEditingWantsId)?.createdAt||now):now,
-    updatedAt:now,
   };
+
+  const btn=document.getElementById('planSubmitBtn'); btn.disabled=true;
+  showBusyOverlay('保存中…');
+
   if(planEditingExistingId){
-    const idx=plans.findIndex(p=>p.id===planEditingExistingId);
-    if(idx>=0)plans[idx]=data; else plans.push(data);
+    const existing=plans.find(p=>p.id===planEditingExistingId);
+    const res=await updatePlan(planEditingExistingId, data, existing?existing.updatedAt:'');
+    hideBusyOverlay(); btn.disabled=false;
+    if(!res.ok){
+      if(res.conflict){ showErrorToast('他の端末で更新されたため反映できませんでした。最新の状態を取得します。'); }
+      else { showErrorToast('保存に失敗しました。'); }
+      plans=await fetchPlans();
+      closeM('planModal'); openDetail(planEditingWantsId); return;
+    }
+    const idx=plans.findIndex(p=>p.id===planEditingExistingId); if(idx>=0)plans[idx]=res.row;
   } else {
-    plans.push(data);
+    data.id=uid();
+    const created=await createPlan(data);
+    hideBusyOverlay(); btn.disabled=false;
+    if(!created){ showErrorToast('保存に失敗しました。'); closeM('planModal'); openDetail(planEditingWantsId); return; }
+    plans.push(created);
   }
-  persistPlans();
   closeM('planModal');
   openDetail(planEditingWantsId);
 }
@@ -994,20 +1031,32 @@ function openEdit(){
   }
   closeM('detModal');openM('editModal');
 }
-function submitEdit(){
+async function submitEdit(){
   const title=document.getElementById('e-title').value.trim();
   if(!title){alert('タイトルを入力してください');return}
   const w=items.find(x=>x.id===editingId);if(!w)return;
   const imgSize=Number(document.getElementById('editImgSize')?.value||120);
-  w.title=title;
-  w.period=getPeriodValue('edit');
-  w.url=document.getElementById('e-url').value.trim();
-  w.map=document.getElementById('e-map').value.trim();
-  w.memo=document.getElementById('e-memo').value.trim();
-  w.tags=[...editTags];w.cost=editCost;w.image=editImgData;w.imgSize=imgSize;
-  if(U.id===w.registrar)w.desire=editDesire; else w.desireB=editDesire;
-  if(w.status==='done')w.doneDate=document.getElementById('e-donedate').value||w.doneDate;
-  persist();closeM('editModal');render();
+  const patch={
+    title,
+    period:getPeriodValue('edit'),
+    url:document.getElementById('e-url').value.trim(),
+    map:document.getElementById('e-map').value.trim(),
+    memo:document.getElementById('e-memo').value.trim(),
+    tags:[...editTags],cost:editCost,image:editImgData,imgSize,
+  };
+  if(U.id===w.registrar)patch.desire=editDesire; else patch.desireB=editDesire;
+  if(w.status==='done')patch.doneDate=document.getElementById('e-donedate').value||w.doneDate;
+
+  const btn=document.getElementById('editSubmitBtn'); btn.disabled=true;
+  showBusyOverlay('保存中…');
+  const res=await updateWants(w.id, patch, w.updatedAt);
+  hideBusyOverlay(); btn.disabled=false;
+  if(!res.ok){
+    await handleConflictOrError(res);
+    closeM('editModal'); render(); return;
+  }
+  const idx=items.findIndex(x=>x.id===w.id); if(idx>=0)items[idx]=res.row;
+  closeM('editModal');render();
 }
 
 /* ═══ FILTER ═══ */

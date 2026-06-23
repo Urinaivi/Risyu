@@ -14,8 +14,11 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .hdr{padding:max(52px,env(safe-area-inset-top,52px)) 20px 10px;background:var(--bg);flex-shrink:0}
 .hdr-top{display:flex;align-items:center;justify-content:space-between}
 .hdr-title{font-size:22px;font-weight:700;color:var(--text)}
-.gas-btn{width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;background:#e4e4e9;font-size:20px;display:flex;align-items:center;justify-content:center;transition:background .15s}
-.gas-btn:active{background:#d1d1d6}
+.hdr-acts{display:flex;gap:6px}
+.gas-btn,.refresh-btn{width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;background:#e4e4e9;font-size:18px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.gas-btn:active,.refresh-btn:active{background:#d1d1d6}
+.refresh-btn.spin{animation:spin .5s ease}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .tab-bar{display:flex;gap:8px;padding:4px 16px 12px;background:var(--bg);align-items:center;flex-shrink:0}
 .tab-pill{padding:9px 18px;border-radius:22px;font-size:14px;font-weight:600;font-family:'Noto Sans JP',sans-serif;border:none;cursor:pointer;transition:background .2s,color .2s;white-space:nowrap}
 .tab-pill.on{background:var(--accent);color:#fff;box-shadow:0 3px 10px rgba(124,122,255,.35)}
@@ -81,6 +84,7 @@ input[type=datetime-local]{color-scheme:light}
 .ok-btn{display:block;width:calc(100% - 28px);margin:2px 14px 12px;padding:15px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-size:16px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;letter-spacing:.04em;transition:opacity .15s,transform .12s}
 .ok-btn:active{opacity:.82;transform:scale(.98)}
 .ok-btn.green{background:var(--green)}
+.ok-btn:disabled{opacity:.5}
 .del-btn{display:block;width:calc(100% - 28px);margin:4px 14px 22px;padding:13px;background:#ffe5e4;color:var(--red);border:none;border-radius:var(--r);font-size:15px;font-weight:600;font-family:'Noto Sans JP',sans-serif;cursor:pointer}
 .det-title{font-size:22px;font-weight:700;color:var(--text);padding:4px 16px 14px}
 .det-row{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 16px;border-bottom:.5px solid var(--border);font-size:14px;gap:12px}
@@ -108,7 +112,10 @@ input[type=datetime-local]{color-scheme:light}
   <div class="hdr">
     <div class="hdr-top">
       <div class="hdr-title">支払い管理</div>
-      <button class="gas-btn" onclick="openGasCalc()">⛽</button>
+      <div class="hdr-acts">
+        <button class="refresh-btn" id="refreshBtn" onclick="manualRefresh()">🔄</button>
+        <button class="gas-btn" onclick="openGasCalc()">⛽</button>
+      </div>
     </div>
   </div>
   <div class="tab-bar">
@@ -142,7 +149,7 @@ input[type=datetime-local]{color-scheme:light}
         <div class="f-row"><span class="f-lbl">ステータス</span><div class="tgl-g"><button class="tgl tgl-red" id="t-unpaid" onclick="setStatus('unpaid')">未支払い</button><button class="tgl tgl-off" id="t-paid" onclick="setStatus('paid')">支払済み</button></div></div>
         <div class="f-row" id="paidDateRow" style="display:none"><span class="f-lbl">支払日時</span><input class="f-inp" type="datetime-local" id="f-paiddate"/></div>
       </div>
-      <button class="ok-btn" onclick="submitAdd()">追加する</button>
+      <button class="ok-btn" id="addSubmitBtn" onclick="submitAdd()">追加する</button>
     </div>
   </div>
 
@@ -166,7 +173,7 @@ input[type=datetime-local]{color-scheme:light}
         <div class="f-row"><span class="f-lbl">日時</span><input class="f-inp" type="datetime-local" id="p-date"/></div>
         <div class="f-row"><span class="f-lbl">メモ</span><input class="f-inp" type="text" id="p-memo" placeholder="任意"/></div>
       </div>
-      <button class="ok-btn green" onclick="submitPartial()">記録する</button>
+      <button class="ok-btn green" id="partialSubmitBtn" onclick="submitPartial()">記録する</button>
     </div>
   </div>
 
@@ -184,7 +191,7 @@ input[type=datetime-local]{color-scheme:light}
         <div class="f-row"><span class="f-lbl">日時</span><input class="f-inp" type="datetime-local" id="dp-date"/></div>
         <div class="f-row"><span class="f-lbl">メモ</span><input class="f-inp" type="text" id="dp-memo" placeholder="差額支払い"/></div>
       </div>
-      <button class="ok-btn green" onclick="submitDiffPay()">支払い処理する</button>
+      <button class="ok-btn green" id="diffSubmitBtn" onclick="submitDiffPay()">支払い処理する</button>
     </div>
   </div>
 
@@ -214,13 +221,12 @@ input[type=datetime-local]{color-scheme:light}
 
 <script src="auth.js"></script>
 <script>
-const STORE='pay_v1';
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function yen(n){return'¥'+Number(n).toLocaleString()}
 function nowISO(){const d=new Date();d.setSeconds(0,0);return d.toISOString().slice(0,16)}
 function fmtDT(s){if(!s)return'—';const d=new Date(s);if(isNaN(d))return s;const p=n=>String(n).padStart(2,'0');return`${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`}
 
-let payments,tab='me',fWho='me',fStatus='unpaid',gWho='me',gasAmount=0;
+let payments=[],tab='me',fWho='me',fStatus='unpaid',gWho='me',gasAmount=0;
 let U,P,partialTargetId=null;
 
 async function init(){
@@ -234,23 +240,20 @@ async function init(){
   document.getElementById('t-partner').innerHTML=iconHTML(P.icon,14)+' '+P.name;
   document.getElementById('g-me').innerHTML=iconHTML(U.icon,14)+' '+U.name;
   document.getElementById('g-partner').innerHTML=iconHTML(P.icon,14)+' '+P.name;
-  try{const s=JSON.parse(localStorage.getItem(STORE));payments=(Array.isArray(s)&&s.length)?s.map(migratePayment):[];}catch{payments=[]}
-  await syncOnLoad(["payments","accounts"]);
-  try{const s=JSON.parse(localStorage.getItem(STORE));payments=(Array.isArray(s)&&s.length)?s.map(migratePayment):[];}catch{}
-  autoDelete(); render();
+
+  document.getElementById('scroll').innerHTML='<div class="empty-row">読み込み中…</div>';
+  payments = await fetchPayments();
+  render();
 }
 
-function migratePayment(p){ return {history:[], ...p}; }
-
-function autoDelete(){
-  const lim=90*24*60*60*1000,now=Date.now();
-  payments=payments.filter(p=>{
-    if(!p.paidDate)return true;
-    const t=new Date(p.paidDate).getTime();
-    return isNaN(t)||now-t<lim;
-  });
+async function manualRefresh(){
+  const btn=document.getElementById('refreshBtn');
+  btn.classList.add('spin');
+  payments = await fetchPayments();
+  render();
+  setTimeout(()=>btn.classList.remove('spin'),500);
 }
-async function persist(){localStorage.setItem(STORE,JSON.stringify(payments));await syncOnSave('payments',payments);}
+
 function myId(){return U.id}
 function ptId(){return P.id}
 function tabId(){return tab==='me'?myId():ptId()}
@@ -331,13 +334,18 @@ function setStatus(s){
   document.getElementById('t-paid').className='tgl '+(s==='paid'?'tgl-green':'tgl-off');
   document.getElementById('paidDateRow').style.display=s==='paid'?'flex':'none';
 }
-function submitAdd(){
+async function submitAdd(){
   const date=document.getElementById('f-date').value,amount=parseInt(document.getElementById('f-amount').value,10),memo=document.getElementById('f-memo').value.trim();
   if(!date||isNaN(amount)||amount<1){alert('発生日時と金額（1円以上）を入力してください');return}
   const paidDate=fStatus==='paid'?(document.getElementById('f-paiddate').value||date):null;
-  payments.push({id:uid(),date,amount,memo,who:whoId(fWho),status:fStatus,paidDate,createdAt:new Date().toISOString(),history:[]});
+  const btn=document.getElementById('addSubmitBtn'); btn.disabled=true;
+  showBusyOverlay('保存中…');
+  const created = await createPayment({id:uid(),date,amount,memo,who:whoId(fWho),status:fStatus,paidDate,createdAt:new Date().toISOString(),history:[]});
+  hideBusyOverlay(); btn.disabled=false;
+  if(!created){ showErrorToast('保存に失敗しました。通信環境を確認して再度お試しください。'); return; }
+  payments.push(created);
   payments.sort((a,b)=>b.date.localeCompare(a.date));
-  persist(); closeM('addModal'); render();
+  closeM('addModal'); render();
 }
 
 /* ─── 詳細 ─── */
@@ -360,10 +368,19 @@ function openDetail(id){
   btn.className='ok-btn';
   btn.style.cssText=`background:${p.status==='unpaid'||p.status==='partial'?'var(--green)':'var(--accent)'};margin-bottom:6px`;
   btn.textContent=p.status==='paid'?'↩ 未支払いに戻す':'✅ 支払済みにする';
-  btn.onclick=()=>{
-    p.status=p.status==='paid'?'unpaid':'paid';
-    p.paidDate=p.status==='paid'?new Date().toISOString():null;
-    persist(); closeM('detModal'); render();
+  btn.onclick=async ()=>{
+    const newStatus = p.status==='paid'?'unpaid':'paid';
+    const newPaidDate = newStatus==='paid'?new Date().toISOString():null;
+    btn.disabled=true; showBusyOverlay('保存中…');
+    const res = await updatePayment(p.id, {status:newStatus, paidDate:newPaidDate}, p.updatedAt);
+    hideBusyOverlay(); btn.disabled=false;
+    if(!res.ok){
+      if(res.conflict){ showErrorToast('他の端末で更新されたため反映できませんでした。最新の状態を取得します。'); payments=await fetchPayments(); }
+      else { showErrorToast('保存に失敗しました。'); }
+      closeM('detModal'); render(); return;
+    }
+    const idx=payments.findIndex(x=>x.id===p.id); if(idx>=0)payments[idx]=res.row;
+    closeM('detModal'); render();
   };
   document.getElementById('detBody').appendChild(btn);
 
@@ -375,10 +392,19 @@ function openDetail(id){
     document.getElementById('detBody').appendChild(pbtn);
   }
 
-  document.getElementById('delBtn').onclick=()=>{
+  document.getElementById('delBtn').onclick=async ()=>{
     if(!confirm('削除しますか？'))return;
+    const dbtn=document.getElementById('delBtn'); dbtn.disabled=true;
+    showBusyOverlay('削除中…');
+    const res = await deletePayment(p.id, p.updatedAt);
+    hideBusyOverlay(); dbtn.disabled=false;
+    if(!res.ok){
+      if(res.conflict){ showErrorToast('他の端末で更新されたため削除できませんでした。最新の状態を取得します。'); payments=await fetchPayments(); }
+      else { showErrorToast('削除に失敗しました。'); }
+      closeM('detModal'); render(); return;
+    }
     payments=payments.filter(x=>x.id!==id);
-    persist(); closeM('detModal'); render();
+    closeM('detModal'); render();
   };
   openM('detModal');
 }
@@ -390,21 +416,29 @@ function openPartial(){
   document.getElementById('p-memo').value='';
   openM('partialModal');
 }
-function submitPartial(){
+async function submitPartial(){
   const p=payments.find(x=>x.id===partialTargetId);if(!p)return;
   const amount=parseInt(document.getElementById('p-amount').value,10);
   const date=document.getElementById('p-date').value||nowISO();
   const memo=document.getElementById('p-memo').value.trim();
   if(isNaN(amount)||amount<1){alert('金額を入力してください');return}
-  if(amount>=p.amount){
-    p.status='paid'; p.paidDate=date;
-  } else {
-    p.amount=Math.max(0, p.amount-amount);
-    p.status='partial';
+
+  const newHistory=[...(p.history||[]), {id:uid(),date,amount,memo}];
+  let newAmount=p.amount, newStatus=p.status, newPaidDate=p.paidDate;
+  if(amount>=p.amount){ newStatus='paid'; newPaidDate=date; }
+  else { newAmount=Math.max(0,p.amount-amount); newStatus='partial'; }
+
+  const btn=document.getElementById('partialSubmitBtn'); btn.disabled=true;
+  showBusyOverlay('保存中…');
+  const res = await updatePayment(p.id, {amount:newAmount,status:newStatus,paidDate:newPaidDate,history:newHistory}, p.updatedAt);
+  hideBusyOverlay(); btn.disabled=false;
+  if(!res.ok){
+    if(res.conflict){ showErrorToast('他の端末で更新されたため反映できませんでした。最新の状態を取得します。'); payments=await fetchPayments(); }
+    else { showErrorToast('保存に失敗しました。'); }
+    closeM('partialModal'); render(); return;
   }
-  if(!p.history)p.history=[];
-  p.history.push({id:uid(),date,amount,memo});
-  persist(); closeM('partialModal'); render();
+  const idx=payments.findIndex(x=>x.id===p.id); if(idx>=0)payments[idx]=res.row;
+  closeM('partialModal'); render();
 }
 
 /* ─── 差額支払い ─── */
@@ -420,7 +454,7 @@ function openDiffPay(){
   document.getElementById('dp-memo').value='差額支払い';
   openM('diffPayModal');
 }
-function submitDiffPay(){
+async function submitDiffPay(){
   const amount=parseInt(document.getElementById('dp-amount').value,10);
   const date=document.getElementById('dp-date').value||nowISO();
   const memo=document.getElementById('dp-memo').value.trim();
@@ -430,20 +464,46 @@ function submitDiffPay(){
   const targets=payments.filter(p=>(p.who===cid||p.who===oid)&&(p.status==='unpaid'||p.status==='partial'))
     .sort((a,b)=>b.amount-a.amount);
 
+  // 各対象payをどう更新するか先に計算する（送信は1件ずつ順番に行い、失敗したら即時中断）
   let remaining=amount;
+  const updates=[];
   for(const p of targets){
     if(remaining<=0)break;
-    if(!p.history)p.history=[];
+    let newAmount=p.amount, newStatus=p.status, newPaidDate=p.paidDate;
+    let histAdd;
     if(remaining>=p.amount){
-      remaining-=p.amount;p.amount=0;p.status='paid';p.paidDate=date;
-      p.history.push({id:uid(),date,amount:p.amount,memo});
+      histAdd={id:uid(),date,amount:p.amount,memo};
+      newAmount=0; newStatus='paid'; newPaidDate=date;
+      remaining-=p.amount;
     } else {
-      p.amount-=remaining;p.status='partial';
-      p.history.push({id:uid(),date,amount:remaining,memo});
+      histAdd={id:uid(),date,amount:remaining,memo};
+      newAmount=p.amount-remaining; newStatus='partial';
       remaining=0;
     }
+    updates.push({p, patch:{amount:newAmount,status:newStatus,paidDate:newPaidDate,history:[...(p.history||[]),histAdd]}});
   }
-  persist(); closeM('diffPayModal'); render();
+
+  const btn=document.getElementById('diffSubmitBtn'); btn.disabled=true;
+  showBusyOverlay('保存中…(0/'+updates.length+')');
+  let hadConflict=false, hadError=false, doneCount=0;
+  for(const u of updates){
+    const res = await updatePayment(u.p.id, u.patch, u.p.updatedAt);
+    doneCount++;
+    showBusyOverlay('保存中…('+doneCount+'/'+updates.length+')');
+    if(!res.ok){
+      if(res.conflict) hadConflict=true; else hadError=true;
+      break; // 以降は中断。すでに成功した分はサーバに反映済みなので、最後に再取得して画面に正しい状態を出す
+    } else {
+      const idx=payments.findIndex(x=>x.id===u.p.id); if(idx>=0)payments[idx]=res.row;
+    }
+  }
+  hideBusyOverlay(); btn.disabled=false;
+
+  if(hadConflict||hadError){
+    showErrorToast(hadConflict ? '他の端末での更新と重なったため、一部のみ反映されました。最新の状態を取得します。' : '保存中にエラーが発生しました。最新の状態を取得します。');
+    payments = await fetchPayments();
+  }
+  closeM('diffPayModal'); render();
 }
 
 /* ─── ガソリン代 ─── */
@@ -469,13 +529,18 @@ function calcGas(){
   document.getElementById('g-result').textContent=yen(gasAmount);
   document.getElementById('g-claim-btn').disabled=gasAmount<=0;
 }
-function claimGas(){
+async function claimGas(){
   if(gasAmount<=0){alert('先に計算してください');return}
   const date=document.getElementById('g-date').value||nowISO();
   const memo=(document.getElementById('g-memo').value||'ガソリン代').trim();
-  payments.push({id:uid(),date,amount:gasAmount,memo,who:whoId(gWho),status:'unpaid',paidDate:null,createdAt:new Date().toISOString(),history:[]});
+  const btn=document.getElementById('g-claim-btn'); btn.disabled=true;
+  showBusyOverlay('保存中…');
+  const created = await createPayment({id:uid(),date,amount:gasAmount,memo,who:whoId(gWho),status:'unpaid',paidDate:null,createdAt:new Date().toISOString(),history:[]});
+  hideBusyOverlay();
+  if(!created){ showErrorToast('保存に失敗しました。'); btn.disabled=false; return; }
+  payments.push(created);
   payments.sort((a,b)=>b.date.localeCompare(a.date));
-  persist(); closeM('gasModal'); render();
+  closeM('gasModal'); render();
 }
 
 init();

@@ -1,32 +1,103 @@
 /* ================================================================
    auth.js  ―  認証 / アカウント / テーマ / GAS同期 共通ユーティリティ
-   ※ スタンプカード・ビンゴ機能は廃止。計画書(plans)機能を追加。
+   ------------------------------------------------------------
+   v3: GASを「唯一の正データ」として扱う行レベルCRUD方式に変更。
+   ・全件SET方式は廃止。1件ずつ create/update/delete を送信し、
+     成功レスポンスを受け取るまでローカルには反映しない。
+   ・楽観ロック：update/delete時に expectedUpdatedAt を送り、
+     サーバ側の現在値と食い違えば conflict として呼び出し元に伝える。
+   ・ローカルストレージは「表示用キャッシュ」位置づけ。
+     画面を開くたびに必ずGASから最新を取得して上書きする。
 ================================================================ */
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzcrClFMEY1FeQu1IHALsIxokegXL8JcJjZOo9r9peaEOfMtnQ4g_LTVeEFUQwRIafW/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzFs4LaxAKnNRwmtCEik6m3SdIyDLpnRZVMoQe4RJkdhgMLiUG5FhZBeTWpTcioXv3o/exec';
+const GAS_ENABLED = GAS_URL.trim() !== '';
 
-/* ── アカウント定義（初期値） ── */
+/* ── アカウント定義（初期値・GAS未接続時のフォールバックのみに使用） ── */
 const DEFAULT_ACCOUNTS = [
-  { id:'A', name:'りな',    email:'Urinaivi@gmail.com',   password:'utigatukutta', icon:'🌸', theme:'#ffafe4' },
-  { id:'B', name:'しゅうと', email:'shumon2423@iCloud.com', password:'rinalove',    icon:'🌊', theme:'#a4ceff' },
+  { id:'A', name:'りな',    email:'Urinaivi@gmail.com',   password:'utigatukutta', icon:'🌸', theme:'#ffafe4', updatedAt:'' },
+  { id:'B', name:'しゅうと', email:'shumon2423@iCloud.com', password:'rinalove',    icon:'🌊', theme:'#a4ceff', updatedAt:'' },
 ];
 
 const KEYS = { accounts:'app_accounts', session:'app_session' };
 
-function getAccounts() {
-  try { const d=JSON.parse(localStorage.getItem(KEYS.accounts)); if(Array.isArray(d)&&d.length===2)return d; } catch {}
-  localStorage.setItem(KEYS.accounts,JSON.stringify(DEFAULT_ACCOUNTS));
+/* ================================================================
+   GAS 通信の基本関数
+================================================================ */
+async function gasList(sheet) {
+  if (!GAS_ENABLED) return null;
+  try {
+    const url = `${GAS_URL}?action=list&sheet=${encodeURIComponent(sheet)}&t=${Date.now()}`;
+    const res = await fetch(url);
+    const json = await res.json();
+    if (json.error) { console.warn('[GAS] list error:', json.error); return null; }
+    return json.rows || [];
+  } catch (e) { console.warn('[GAS] list failed:', sheet, e); return null; }
+}
+
+async function gasPost(body) {
+  if (!GAS_ENABLED) return null;
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // GAS doPost simple request対策
+      body: JSON.stringify(body),
+    });
+    return await res.json();
+  } catch (e) { console.warn('[GAS] post failed:', body && body.action, e); return null; }
+}
+
+async function gasCreate(sheet, row) {
+  const res = await gasPost({ action:'create', sheet, row });
+  if (!res) return { ok:false, networkError:true };
+  return res;
+}
+async function gasUpdate(sheet, id, row, expectedUpdatedAt) {
+  const res = await gasPost({ action:'update', sheet, id, row, expectedUpdatedAt });
+  if (!res) return { ok:false, networkError:true };
+  return res;
+}
+async function gasDelete(sheet, id, expectedUpdatedAt) {
+  const res = await gasPost({ action:'delete', sheet, id, expectedUpdatedAt });
+  if (!res) return { ok:false, networkError:true };
+  return res;
+}
+
+/* ================================================================
+   アカウント
+================================================================ */
+function getAccountsLocal() {
+  try { const d = JSON.parse(localStorage.getItem(KEYS.accounts)); if (Array.isArray(d) && d.length) return d; } catch {}
   return DEFAULT_ACCOUNTS;
 }
-function saveAccounts(a)  { localStorage.setItem(KEYS.accounts,JSON.stringify(a)); }
-function getAccount(id)   { return getAccounts().find(a=>a.id===id); }
+function saveAccountsLocal(a) { localStorage.setItem(KEYS.accounts, JSON.stringify(a)); }
+
+// 互換用エイリアス（既存コードからの呼び出し名を維持）
+function getAccounts() { return getAccountsLocal(); }
+function saveAccounts(a) { saveAccountsLocal(a); }
+function getAccount(id) { return getAccountsLocal().find(a => a.id === id); }
+
+/* 起動時にGASからアカウント情報を取得・初期化する */
+async function bootstrapAndSyncAccounts() {
+  if (!GAS_ENABLED) return getAccountsLocal();
+  let rows = await gasList('accounts');
+  if (!rows || rows.length < 2) {
+    const res = await gasPost({ action:'bootstrapAccounts', sheet:'accounts' });
+    if (res && res.ok) rows = res.rows;
+  }
+  if (rows && rows.length) {
+    saveAccountsLocal(rows);
+    return rows;
+  }
+  return getAccountsLocal();
+}
 
 function getSession()   { return localStorage.getItem(KEYS.session); }
-function setSession(id) { localStorage.setItem(KEYS.session,id); }
+function setSession(id) { localStorage.setItem(KEYS.session, id); }
 function clearSession() { localStorage.removeItem(KEYS.session); }
-function currentUser()  { const id=getSession(); return id?getAccount(id):null; }
-function requireLogin() { const user=currentUser(); if(!user){ clearSession(); location.href='login.html'; return false; } return true; }
-function partnerId()    { const id=getSession(); return id==='A'?'B':'A'; }
+function currentUser()  { const id = getSession(); return id ? getAccount(id) : null; }
+function requireLogin() { const user = currentUser(); if (!user) { clearSession(); location.href = 'login.html'; return false; } return true; }
+function partnerId()    { const id = getSession(); return id === 'A' ? 'B' : 'A'; }
 
 function iconHTML(icon, size=18) {
   if (typeof icon === 'string' && icon.startsWith('data:image/')) {
@@ -40,11 +111,28 @@ function isImageIcon(icon) {
 }
 
 function applyTheme(color) {
-  if(!color){const u=currentUser();color=u?u.theme:'#7c7aff';}
-  document.documentElement.style.setProperty('--accent',color);
+  if (!color) { const u = currentUser(); color = u ? u.theme : '#7c7aff'; }
+  document.documentElement.style.setProperty('--accent', color);
 }
 
-/* ─── 通知システム ─── */
+/* アカウント更新（名前・パスワード・テーマ・アイコン変更時に使用）
+   戻り値: {ok, conflict, current} */
+async function updateAccountField(id, patch) {
+  const accs = getAccountsLocal();
+  const acc = accs.find(a => a.id === id);
+  if (!acc) return { ok:false };
+  const expectedUpdatedAt = acc.updatedAt || '';
+  const res = await gasUpdate('accounts', id, patch, expectedUpdatedAt);
+  if (res && res.ok) {
+    const idx = accs.findIndex(a => a.id === id);
+    accs[idx] = res.row;
+    saveAccountsLocal(accs);
+    return { ok:true, row:res.row };
+  }
+  return res || { ok:false };
+}
+
+/* ─── 通知システム（ローカルのみで完結する補助機能。データ消失リスクなし） ─── */
 const NOTIF_KEY = 'wants_notif_v1';
 function getNotifs(){ try{return JSON.parse(localStorage.getItem(NOTIF_KEY))||[]}catch{return[]} }
 function addNotif(msg){
@@ -80,130 +168,216 @@ function navHTML(activePage) {
   }).join('');
 }
 
-/* ─── GAS ─── */
-const GAS_ENABLED = GAS_URL.trim() !== '';
+/* ================================================================
+   データ用 JSON文字列フィールドの変換ヘルパー
+================================================================ */
+function tryParse(s, def) { try { return JSON.parse(s); } catch { return def; } }
 
-async function gasGet(sheetName, parser) {
-  if(!GAS_ENABLED)return null;
-  try {
-    const url=`${GAS_URL}?method=get&sheet=${encodeURIComponent(sheetName)}&t=${Date.now()}`;
-    const rows=await (await fetch(url)).json();
-    if(!Array.isArray(rows)||rows.length===0)return [];
-    return parser?parser(rows):rows;
-  } catch(e){console.warn('[GAS] get failed:',sheetName,e);return null;}
+/* ================================================================
+   支払い (payments)
+   ローカルストレージキー: pay_v1 （表示用キャッシュ。常にGASから取得し直す）
+================================================================ */
+function parsePaymentRow(r) {
+  return {
+    id: r.id, updatedAt: r.updatedAt,
+    date: r.date, amount: Number(r.amount)||0, memo: r.memo||'',
+    who: r.who, status: r.status, paidDate: r.paidDate||null,
+    createdAt: r.createdAt||'', history: r.history ? tryParse(r.history, []) : [],
+  };
+}
+function serializePaymentRow(p) {
+  return {
+    id: p.id, date: p.date, amount: p.amount, memo: p.memo||'',
+    who: p.who, status: p.status, paidDate: p.paidDate||'',
+    createdAt: p.createdAt||'', history: JSON.stringify(p.history||[]),
+  };
 }
 
-async function gasSet(sheetName, rows) {
-  if(!GAS_ENABLED)return false;
-  try {
-    const url=`${GAS_URL}?method=set&sheet=${encodeURIComponent(sheetName)}&data=${encodeURIComponent(JSON.stringify(rows))}`;
-    const json=await (await fetch(url)).json();
-    return json.status==='saved';
-  } catch(e){console.warn('[GAS] set failed:',sheetName,e);return false;}
+/* GASから最新の支払い一覧を取得し、ローカルキャッシュも更新して返す */
+async function fetchPayments() {
+  const rows = await gasList('payments');
+  if (rows === null) {
+    // 通信失敗時のみ、直前のキャッシュを返す（表示が完全に消えるのを防ぐ目的のみ）
+    try { const c = JSON.parse(localStorage.getItem('pay_v1')); return Array.isArray(c) ? c : []; } catch { return []; }
+  }
+  const list = rows.map(parsePaymentRow);
+  localStorage.setItem('pay_v1', JSON.stringify(list));
+  return list;
+}
+/* 1件追加。成功時は作成された行（updatedAt含む）を返す。失敗時はnull */
+async function createPayment(p) {
+  const res = await gasCreate('payments', serializePaymentRow(p));
+  if (res && res.ok) return parsePaymentRow(res.row);
+  return null;
+}
+/* 1件更新。expectedUpdatedAtは更新前にローカルが持っていたupdatedAt。
+   戻り値: {ok, conflict, row} */
+async function updatePayment(id, patch, expectedUpdatedAt) {
+  const res = await gasUpdate('payments', id, serializePaymentRow(Object.assign({id},patch)), expectedUpdatedAt);
+  if (res && res.ok) return { ok:true, row: parsePaymentRow(res.row) };
+  if (res && res.conflict) return { ok:false, conflict:true, row: parsePaymentRow(res.current) };
+  return { ok:false };
+}
+async function deletePayment(id, expectedUpdatedAt) {
+  const res = await gasDelete('payments', id, expectedUpdatedAt);
+  if (res && (res.ok)) return { ok:true };
+  if (res && res.conflict) return { ok:false, conflict:true, row: parsePaymentRow(res.current) };
+  return { ok:false };
 }
 
-/* ── 支払い ── */
-const PAY_HDR=['id','date','amount','memo','who','status','paidDate','createdAt','history'];
-async function loadPaymentsRemote(){return gasGet('payments',rows=>{if(rows.length<=1)return[];return rows.slice(1).map(r=>({id:r[0],date:r[1],amount:Number(r[2]),memo:r[3],who:r[4],status:r[5],paidDate:r[6]||null,createdAt:r[7],history:r[8]?JSON.parse(r[8]):[]})).filter(p=>p.id);})}
-async function savePaymentsRemote(payments){return gasSet('payments',[PAY_HDR,...payments.map(p=>[p.id,p.date,p.amount,p.memo||'',p.who,p.status,p.paidDate||'',p.createdAt||'',JSON.stringify(p.history||[])])]);}
-
-/* ── やりたいこと（desireBフィールド含む） ── */
-const WANTS_HDR=['id','title','regDate','period','url','memo','registrar','status','doneDate','createdAt','tags','map','cost','image','desire','desireB','imgSize'];
-async function loadWantsRemote(){return gasGet('wants',rows=>{if(rows.length<=1)return[];return rows.slice(1).map(r=>({
-  id:r[0],title:r[1],regDate:r[2],period:r[3],url:r[4],memo:r[5],registrar:r[6],status:r[7],
-  doneDate:r[8]||null,createdAt:r[9],
-  tags:r[10]?tryParse(r[10],[]):[],
-  map:r[11]||'',cost:r[12]||'',
-  image:r[13]||'',
-  desire:Number(r[14])||0,
-  desireB:Number(r[15])||0,
-  imgSize:Number(r[16])||120,
-})).filter(w=>w.id);})}
-function tryParse(s,def){try{return JSON.parse(s)}catch{return def}}
-async function saveWantsRemote(wants){
-  // 画像はローカルのみ保存（GASのURL長制限回避）
-  return gasSet('wants',[WANTS_HDR,...wants.map(w=>[
-    w.id,w.title,w.regDate||'',w.period||'',w.url||'',w.memo||'',
-    w.registrar,w.status,w.doneDate||'',w.createdAt||'',
-    JSON.stringify(w.tags||[]),w.map||'',w.cost||'',
-    '',  // imageはローカルのみ
-    w.desire||0,w.desireB||0,w.imgSize||120
-  ])]);}
-
-/* ── 計画書（やりたいことリストの1項目に対し0〜1件、wantsIdで紐づく） ── */
-const PLAN_HDR=['id','wantsId','title','date','url','schedule','items','expenses','shoppingList','memo','reservation','todoList','createdAt','updatedAt'];
-async function loadPlansRemote(){return gasGet('plans',rows=>{if(rows.length<=1)return[];return rows.slice(1).map(r=>({
-  id:r[0],wantsId:r[1],title:r[2],date:r[3],url:r[4],
-  schedule:r[5]?tryParse(r[5],[]):[],
-  items:r[6]?tryParse(r[6],[]):[],
-  expenses:r[7]?tryParse(r[7],[]):[],
-  shoppingList:r[8]?tryParse(r[8],[]):[],
-  memo:r[9]||'',
-  reservation:r[10]||'',
-  todoList:r[11]?tryParse(r[11],[]):[],
-  createdAt:r[12]||'',updatedAt:r[13]||'',
-})).filter(p=>p.id);})}
-async function savePlansRemote(plans){
-  return gasSet('plans',[PLAN_HDR,...plans.map(p=>[
-    p.id,p.wantsId,p.title||'',p.date||'',p.url||'',
-    JSON.stringify(p.schedule||[]),
-    JSON.stringify(p.items||[]),
-    JSON.stringify(p.expenses||[]),
-    JSON.stringify(p.shoppingList||[]),
-    p.memo||'',
-    p.reservation||'',
-    JSON.stringify(p.todoList||[]),
-    p.createdAt||'',p.updatedAt||''
-  ])]);
+/* ================================================================
+   やりたいこと (wants)
+   ローカルストレージキー: wants_v1
+   ※画像(image)はGASに送らずローカルのみで保持する（URL長制限回避のため、現行仕様を維持）
+================================================================ */
+function parseWantsRow(r, localImageMap) {
+  const id = r.id;
+  return {
+    id, updatedAt: r.updatedAt,
+    title: r.title, regDate: r.regDate||'', period: r.period||'', url: r.url||'',
+    memo: r.memo||'', registrar: r.registrar, status: r.status, doneDate: r.doneDate||null,
+    createdAt: r.createdAt||'',
+    tags: r.tags ? tryParse(r.tags, []) : [],
+    map: r.map||'', cost: r.cost||'',
+    desire: Number(r.desire)||0, desireB: Number(r.desireB)||0,
+    imgSize: Number(r.imgSize)||120,
+    image: (localImageMap && localImageMap[id]) || '',
+  };
+}
+function serializeWantsRow(w) {
+  return {
+    id: w.id, title: w.title, regDate: w.regDate||'', period: w.period||'', url: w.url||'',
+    memo: w.memo||'', registrar: w.registrar, status: w.status, doneDate: w.doneDate||'',
+    createdAt: w.createdAt||'', tags: JSON.stringify(w.tags||[]),
+    map: w.map||'', cost: w.cost||'',
+    desire: w.desire||0, desireB: w.desireB||0, imgSize: w.imgSize||120,
+  };
+}
+function loadLocalImageMap() {
+  try { return JSON.parse(localStorage.getItem('wants_images_v1')) || {}; } catch { return {}; }
+}
+function saveLocalImageMap(map) { localStorage.setItem('wants_images_v1', JSON.stringify(map)); }
+function setLocalImage(id, dataUrl) {
+  const map = loadLocalImageMap();
+  if (dataUrl) map[id] = dataUrl; else delete map[id];
+  saveLocalImageMap(map);
 }
 
-/* ── アカウント ── */
-async function syncAccountsRemote(){
-  const remote=await gasGet('accounts',rows=>{if(rows.length<2)return null;try{return JSON.parse(rows[1][0]);}catch{return null;}});
-  if(remote&&Array.isArray(remote)){saveAccounts(remote);return remote;}
-  const local=getAccounts();
-  await gasSet('accounts',[['data'],[JSON.stringify(local)]]);
-  return local;
+async function fetchWants() {
+  const rows = await gasList('wants');
+  const imgMap = loadLocalImageMap();
+  if (rows === null) {
+    try { const c = JSON.parse(localStorage.getItem('wants_v1')); return Array.isArray(c) ? c : []; } catch { return []; }
+  }
+  const list = rows.map(r => parseWantsRow(r, imgMap));
+  localStorage.setItem('wants_v1', JSON.stringify(list));
+  return list;
 }
-async function saveAccountsRemote(accounts){
-  saveAccounts(accounts);
-  return gasSet('accounts',[['data'],[JSON.stringify(accounts)]]);
+async function createWants(w) {
+  const res = await gasCreate('wants', serializeWantsRow(w));
+  if (res && res.ok) {
+    if (w.image) setLocalImage(res.row.id, w.image);
+    return parseWantsRow(res.row, loadLocalImageMap());
+  }
+  return null;
 }
-
-/* ── syncOnLoad / syncOnSave ── */
-async function syncOnLoad(targets=[]){
-  if(!GAS_ENABLED)return;
-  await Promise.all(targets.map(async t=>{
-    if(t==='payments'){const d=await loadPaymentsRemote();if(d&&d.length)localStorage.setItem('pay_v1',JSON.stringify(d));}
-    else if(t==='wants'){
-      const local=JSON.parse(localStorage.getItem('wants_v1')||'[]');
-      const remote=await loadWantsRemote();
-      if(remote&&remote.length){
-        // ローカルをベースに、リモートからの更新をマージ
-        const merged=local.map(loc=>{
-          const rem=remote.find(r=>r.id===loc.id);
-          return rem?{...rem,image:loc.image||'',imgSize:loc.imgSize||120}:loc;
-        });
-        // リモートにあってローカルにないものを追加
-        const newFromRemote=remote.filter(rem=>!local.some(loc=>loc.id===rem.id));
-        merged.push(...newFromRemote);
-        localStorage.setItem('wants_v1',JSON.stringify(merged));
-      }
-    }
-    else if(t==='plans'){
-      const remote=await loadPlansRemote();
-      if(remote)localStorage.setItem('plans_v1',JSON.stringify(remote));
-    }
-    else if(t==='accounts'){await syncAccountsRemote();}
-  }));
+async function updateWants(id, patch, expectedUpdatedAt) {
+  const res = await gasUpdate('wants', id, serializeWantsRow(Object.assign({id}, patch)), expectedUpdatedAt);
+  if (res && res.ok) {
+    if (patch.image !== undefined) setLocalImage(id, patch.image);
+    return { ok:true, row: parseWantsRow(res.row, loadLocalImageMap()) };
+  }
+  if (res && res.conflict) return { ok:false, conflict:true, row: parseWantsRow(res.current, loadLocalImageMap()) };
+  return { ok:false };
+}
+async function deleteWants(id, expectedUpdatedAt) {
+  const res = await gasDelete('wants', id, expectedUpdatedAt);
+  if (res && res.ok) { setLocalImage(id, ''); return { ok:true }; }
+  if (res && res.conflict) return { ok:false, conflict:true, row: parseWantsRow(res.current, loadLocalImageMap()) };
+  return { ok:false };
 }
 
-function syncOnSave(type,data){
-  if(!GAS_ENABLED)return;
-  (async()=>{
-    if(type==='payments')      await savePaymentsRemote(data);
-    else if(type==='wants')    await saveWantsRemote(data);
-    else if(type==='plans')    await savePlansRemote(data);
-    else if(type==='accounts') await saveAccountsRemote(data);
-  })();
+/* ================================================================
+   計画書 (plans)  ローカルストレージキー: plans_v1
+================================================================ */
+function parsePlanRow(r) {
+  return {
+    id: r.id, updatedAt: r.updatedAt, wantsId: r.wantsId,
+    title: r.title||'', date: r.date||'', url: r.url||'',
+    schedule: r.schedule ? tryParse(r.schedule, []) : [],
+    items: r.items ? tryParse(r.items, []) : [],
+    expenses: r.expenses ? tryParse(r.expenses, []) : [],
+    shoppingList: r.shoppingList ? tryParse(r.shoppingList, []) : [],
+    memo: r.memo||'', reservation: r.reservation||'',
+    todoList: r.todoList ? tryParse(r.todoList, []) : [],
+    createdAt: r.createdAt||'',
+  };
+}
+function serializePlanRow(p) {
+  return {
+    id: p.id, wantsId: p.wantsId, title: p.title||'', date: p.date||'', url: p.url||'',
+    schedule: JSON.stringify(p.schedule||[]), items: JSON.stringify(p.items||[]),
+    expenses: JSON.stringify(p.expenses||[]), shoppingList: JSON.stringify(p.shoppingList||[]),
+    memo: p.memo||'', reservation: p.reservation||'', todoList: JSON.stringify(p.todoList||[]),
+    createdAt: p.createdAt||'',
+  };
+}
+async function fetchPlans() {
+  const rows = await gasList('plans');
+  if (rows === null) {
+    try { const c = JSON.parse(localStorage.getItem('plans_v1')); return Array.isArray(c) ? c : []; } catch { return []; }
+  }
+  const list = rows.map(parsePlanRow);
+  localStorage.setItem('plans_v1', JSON.stringify(list));
+  return list;
+}
+async function createPlan(p) {
+  const res = await gasCreate('plans', serializePlanRow(p));
+  if (res && res.ok) return parsePlanRow(res.row);
+  return null;
+}
+async function updatePlan(id, patch, expectedUpdatedAt) {
+  const res = await gasUpdate('plans', id, serializePlanRow(Object.assign({id}, patch)), expectedUpdatedAt);
+  if (res && res.ok) return { ok:true, row: parsePlanRow(res.row) };
+  if (res && res.conflict) return { ok:false, conflict:true, row: parsePlanRow(res.current) };
+  return { ok:false };
+}
+async function deletePlan(id, expectedUpdatedAt) {
+  const res = await gasDelete('plans', id, expectedUpdatedAt);
+  if (res && res.ok) return { ok:true };
+  if (res && res.conflict) return { ok:false, conflict:true, row: parsePlanRow(res.current) };
+  return { ok:false };
+}
+
+/* ================================================================
+   共通：保存中UIブロック / エラー表示の補助
+================================================================ */
+let _busyOverlayEl = null;
+function showBusyOverlay(msg) {
+  if (!_busyOverlayEl) {
+    _busyOverlayEl = document.createElement('div');
+    _busyOverlayEl.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,.25);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(1px)';
+    _busyOverlayEl.innerHTML = `<div style="background:#fff;border-radius:14px;padding:18px 22px;font-size:14px;font-weight:600;color:#1c1c1e;box-shadow:0 8px 30px rgba(0,0,0,.2);display:flex;align-items:center;gap:10px">
+      <span style="width:16px;height:16px;border:2.5px solid #d1d1d6;border-top-color:#7c7aff;border-radius:50%;display:inline-block;animation:authjs-spin .7s linear infinite"></span>
+      <span id="authjsBusyMsg"></span>
+    </div>`;
+    const styleTag = document.createElement('style');
+    styleTag.textContent = '@keyframes authjs-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}';
+    document.head.appendChild(styleTag);
+  }
+  document.getElementById('authjsBusyMsg') ? null : _busyOverlayEl.querySelector('#authjsBusyMsg');
+  _busyOverlayEl.querySelector('#authjsBusyMsg').textContent = msg || '保存中…';
+  const phone = document.querySelector('.phone') || document.body;
+  phone.appendChild(_busyOverlayEl);
+}
+function hideBusyOverlay() {
+  if (_busyOverlayEl && _busyOverlayEl.parentNode) _busyOverlayEl.parentNode.removeChild(_busyOverlayEl);
+}
+function showErrorToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:#ff3b30;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:10000;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:85%;text-align:center';
+  t.textContent = msg;
+  const phone = document.querySelector('.phone') || document.body;
+  phone.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
 }

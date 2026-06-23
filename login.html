@@ -12,7 +12,7 @@
 html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;align-items:center;font-family:'Noto Sans JP',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
 .phone{width:min(390px,100vw);height:min(844px,100dvh);background:var(--bg);border-radius:clamp(0px,calc((100vw - 390px)*-99),48px);overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 40px 80px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.09)}
 .hero{
-  background:linear-gradient(160deg,var(--accent) 0%,#a78bfa 100%);
+  background:linear-gradient(160deg,var(--accent) 0%,#ffbfe9 100%);
   padding:max(60px,env(safe-area-inset-top,60px)) 32px 40px;
   flex-shrink:0;text-align:center;color:#fff;
 }
@@ -37,6 +37,7 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
   box-shadow:0 4px 16px rgba(124,122,255,.4);
 }
 .login-btn:active{opacity:.85;transform:scale(.98)}
+.login-btn:disabled{opacity:.5;cursor:default}
 .account-label{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.06em;text-transform:uppercase;margin:20px 0 8px 4px}
 .acc-cards{display:flex;gap:8px}
 .acc-card{
@@ -54,6 +55,7 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .divider{display:flex;align-items:center;gap:10px;margin:20px 0}
 .divider-line{flex:1;height:.5px;background:var(--border)}
 .divider-text{font-size:12px;color:var(--muted)}
+.loading-msg{text-align:center;font-size:13px;color:var(--sub);padding:20px}
 </style>
 </head>
 <body>
@@ -66,7 +68,7 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 
   <div class="form-area">
     <div class="account-label">アカウントを選ぶ</div>
-    <div class="acc-cards" id="accCards"></div>
+    <div class="acc-cards" id="accCards"><div class="loading-msg">読み込み中…</div></div>
 
     <div class="divider">
       <div class="divider-line"></div>
@@ -81,34 +83,44 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
       </div>
     </div>
 
-    <div class="err-msg" id="errMsg">メールアドレスまたはパスワードが違います</div>
+    <div class="err-msg" id="errMsg">パスワードが違います</div>
 
-    <button class="login-btn" onclick="doLogin()">ログイン</button>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()" disabled>読み込み中…</button>
   </div>
 </div>
 
 <script src="auth.js"></script>
 <script>
 let selectedId = null;
+let accountsCache = [];
 
-function init() {
+async function init() {
   if (getSession()) { location.href = 'index.html'; return; }
 
-  const accounts = getAccounts();
+  // 必ずGASから最新のアカウント情報を取得する（ローカルキャッシュは信用しない）
+  accountsCache = await bootstrapAndSyncAccounts();
+
   const cards = document.getElementById('accCards');
-  cards.innerHTML = accounts.map(a => `
+  if (!accountsCache || accountsCache.length < 2) {
+    cards.innerHTML = '<div class="loading-msg" style="color:var(--red)">サーバーに接続できませんでした。<br>通信環境を確認してください。</div>';
+    return;
+  }
+  cards.innerHTML = accountsCache.map(a => `
     <div class="acc-card" id="acc-${a.id}" onclick="selectAcc('${a.id}')">
       <div class="acc-icon">${iconHTML(a.icon,32)}</div>
       <div class="acc-name">${a.name}</div>
       <div class="acc-email">${a.email}</div>
     </div>`).join('');
 
-  selectAcc(accounts[0].id);
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = false; btn.textContent = 'ログイン';
+
+  selectAcc(accountsCache[0].id);
 }
 
 function selectAcc(id) {
   selectedId = id;
-  getAccounts().forEach(a => {
+  accountsCache.forEach(a => {
     const el = document.getElementById('acc-'+a.id);
     if (el) el.className = 'acc-card' + (a.id === id ? ' selected' : '');
   });
@@ -118,8 +130,7 @@ function selectAcc(id) {
 
 function doLogin() {
   const pw = document.getElementById('pwInput').value;
-  const accs = getAccounts();
-  const acc = accs.find(a => a.id === selectedId);
+  const acc = accountsCache.find(a => a.id === selectedId);
   if (!acc) { showErr(); return; }
   if (acc.password !== pw) { showErr(); return; }
   setSession(acc.id);
