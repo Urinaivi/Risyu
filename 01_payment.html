@@ -27,7 +27,12 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .scroll{flex:1;overflow-y:auto;padding:0 14px 20px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .scroll::-webkit-scrollbar{display:none}
 .sec-lbl{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.07em;text-transform:uppercase;padding:14px 2px 6px}
+.sec-lbl-row{display:flex;align-items:center;justify-content:space-between;padding:14px 2px 6px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sec-lbl-row .sec-lbl{padding:0}
+.sec-toggle-icon{font-size:11px;color:var(--muted);transition:transform .2s;display:inline-block}
+.sec-toggle-icon.collapsed{transform:rotate(-90deg)}
 .c-list{background:var(--card);border-radius:var(--r);overflow:hidden;margin-bottom:6px}
+.c-list.collapsed{display:none}
 .c-row{display:flex;align-items:center;padding:14px 16px;border-bottom:.5px solid var(--border);gap:10px;cursor:pointer;transition:background .12s;-webkit-tap-highlight-color:transparent}
 .c-row:last-child{border-bottom:none}
 .c-row:active{background:#f5f5fa}
@@ -95,6 +100,8 @@ input[type=datetime-local]{color-scheme:light}
 .hist-item{background:var(--card);border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .hist-date{font-size:12px;color:var(--sub)}
 .hist-amount{font-size:15px;font-weight:600;color:var(--green)}
+.hist-undo-btn{width:26px;height:26px;border-radius:50%;border:none;background:#f0f0f5;color:var(--sub);font-size:13px;cursor:pointer;flex-shrink:0}
+.hist-undo-btn:active{background:#e4e4e9}
 .gas-result{margin:4px 14px 14px;background:var(--card);border-radius:var(--r);padding:12px 14px}
 .gas-result-lbl{font-size:12px;color:var(--sub)}
 .gas-result-val{font-size:24px;font-weight:700;color:var(--text);margin-top:4px}
@@ -228,6 +235,8 @@ function fmtDT(s){if(!s)return'—';const d=new Date(s);if(isNaN(d))return s;con
 
 let payments=[],tab='me',fWho='me',fStatus='unpaid',gWho='me',gasAmount=0;
 let U,P,partialTargetId=null;
+let collapsedSections={};
+try{collapsedSections=JSON.parse(localStorage.getItem('pay_collapsed_v1'))||{};}catch{collapsedSections={};}
 
 async function init(){
   if(!requireLogin())return;
@@ -298,10 +307,16 @@ function render(anim){
   };
 
   el.innerHTML=`
-    <div class="sec-lbl">未支払い</div>
-    <div class="c-list">${unpaid.length?unpaid.map(rowHTML).join(''):'<div class="empty-row">データなし</div>'}</div>
-    <div class="sec-lbl">支払い済み</div>
-    <div class="c-list">${paid.length?paid.map(rowHTML).join(''):'<div class="empty-row">データなし</div>'}</div>
+    <div class="sec-lbl-row" onclick="toggleSection('unpaid')">
+      <span class="sec-lbl">未支払い (${unpaid.length})</span>
+      <span class="sec-toggle-icon ${collapsedSections.unpaid?'collapsed':''}">▼</span>
+    </div>
+    <div class="c-list ${collapsedSections.unpaid?'collapsed':''}" id="list-unpaid">${unpaid.length?unpaid.map(rowHTML).join(''):'<div class="empty-row">データなし</div>'}</div>
+    <div class="sec-lbl-row" onclick="toggleSection('paid')">
+      <span class="sec-lbl">支払い済み (${paid.length})</span>
+      <span class="sec-toggle-icon ${collapsedSections.paid?'collapsed':''}">▼</span>
+    </div>
+    <div class="c-list ${collapsedSections.paid?'collapsed':''}" id="list-paid">${paid.length?paid.map(rowHTML).join(''):'<div class="empty-row">データなし</div>'}</div>
     <div class="sec-lbl">合計</div>
     <div class="sum-card">
       <div class="sum-row"><span class="sum-lbl">未支払合計</span><span class="sum-val">${yen(unpaidTotal)}</span></div>
@@ -309,6 +324,11 @@ function render(anim){
     </div>
     <div style="height:6px"></div>`;
   if(anim){el.classList.remove('anim-r','anim-l');void el.offsetWidth;el.classList.add(anim)}
+}
+function toggleSection(key){
+  collapsedSections[key]=!collapsedSections[key];
+  localStorage.setItem('pay_collapsed_v1', JSON.stringify(collapsedSections));
+  render();
 }
 
 function openM(id){document.getElementById(id).classList.add('open')}
@@ -352,7 +372,7 @@ async function submitAdd(){
 function openDetail(id){
   const p=payments.find(x=>x.id===id);if(!p)return;
   const hist=(p.history||[]);
-  const histHTML=hist.length?`<div style="padding:4px 16px 8px;font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.05em">支払経過履歴</div><div class="hist-list">${hist.map(h=>`<div class="hist-item"><div><div class="hist-date">${fmtDT(h.date)}</div>${h.memo?`<div style="font-size:12px;color:var(--sub)">${h.memo}</div>`:''}</div><div class="hist-amount">${yen(h.amount)}</div></div>`).join('')}</div>`:'';
+  const histHTML=hist.length?`<div style="padding:4px 16px 8px;font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.05em">支払経過履歴</div><div class="hist-list">${hist.map(h=>`<div class="hist-item"><div><div class="hist-date">${fmtDT(h.date)}</div>${h.memo?`<div style="font-size:12px;color:var(--sub)">${h.memo}</div>`:''}</div><div style="display:flex;align-items:center;gap:8px"><div class="hist-amount">${yen(h.amount)}</div><button class="hist-undo-btn" onclick="undoHistory('${p.id}','${h.id}')" title="この記録を取り消す">↩</button></div></div>`).join('')}</div>`:'';
 
   document.getElementById('detBody').innerHTML=`
     <div class="det-title">${yen(p.amount)}</div>
@@ -407,6 +427,32 @@ function openDetail(id){
     closeM('detModal'); render();
   };
   openM('detModal');
+}
+
+/* ─── 途中支払いの取り消し ───
+   amountフィールドは「残額」を表すため、取り消す履歴の金額をamountに戻し、
+   ステータスを再計算する。取り消し対象以外の履歴はそのまま残す。 */
+async function undoHistory(paymentId, historyId){
+  const p=payments.find(x=>x.id===paymentId);if(!p)return;
+  const target=(p.history||[]).find(h=>h.id===historyId);if(!target)return;
+  if(!confirm('この支払い記録を取り消しますか？\n（取り消した分は未払いに戻ります）'))return;
+
+  const newHistory=(p.history||[]).filter(h=>h.id!==historyId);
+  const newAmount=p.amount + target.amount;
+  const newStatus = newHistory.length>0 ? 'partial' : 'unpaid';
+  const newPaidDate = newStatus==='paid' ? p.paidDate : null;
+
+  showBusyOverlay('取り消し中…');
+  const res = await updatePayment(p.id, {amount:newAmount,status:newStatus,paidDate:newPaidDate,history:newHistory}, p.updatedAt);
+  hideBusyOverlay();
+  if(!res.ok){
+    if(res.conflict){ showErrorToast('他の端末で更新されたため反映できませんでした。最新の状態を取得します。'); payments=await fetchPayments(); }
+    else { showErrorToast('取り消しに失敗しました。'); }
+    closeM('detModal'); render(); return;
+  }
+  const idx=payments.findIndex(x=>x.id===p.id); if(idx>=0)payments[idx]=res.row;
+  openDetail(p.id); // 詳細を再描画して続けて確認できるようにする
+  render();
 }
 
 /* ─── 途中支払い ─── */

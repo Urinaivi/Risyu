@@ -116,20 +116,25 @@ function applyTheme(color) {
 }
 
 /* アカウント更新（名前・パスワード・テーマ・アイコン変更時に使用）
-   戻り値: {ok, conflict, current} */
+   戻り値: {ok, conflict, current} ※例外が起きても必ずこの形のオブジェクトを返す */
 async function updateAccountField(id, patch) {
-  const accs = getAccountsLocal();
-  const acc = accs.find(a => a.id === id);
-  if (!acc) return { ok:false };
-  const expectedUpdatedAt = acc.updatedAt || '';
-  const res = await gasUpdate('accounts', id, patch, expectedUpdatedAt);
-  if (res && res.ok) {
-    const idx = accs.findIndex(a => a.id === id);
-    accs[idx] = res.row;
-    saveAccountsLocal(accs);
-    return { ok:true, row:res.row };
+  try {
+    const accs = getAccountsLocal();
+    const acc = accs.find(a => a.id === id);
+    if (!acc) return { ok:false };
+    const expectedUpdatedAt = acc.updatedAt || '';
+    const res = await gasUpdate('accounts', id, patch, expectedUpdatedAt);
+    if (res && res.ok) {
+      const idx = accs.findIndex(a => a.id === id);
+      accs[idx] = res.row;
+      saveAccountsLocal(accs);
+      return { ok:true, row:res.row };
+    }
+    return res || { ok:false };
+  } catch (e) {
+    console.warn('[updateAccountField] error:', e);
+    return { ok:false, error:true };
   }
-  return res || { ok:false };
 }
 
 /* ─── 通知システム（ローカルのみで完結する補助機能。データ消失リスクなし） ─── */
@@ -228,12 +233,11 @@ async function deletePayment(id, expectedUpdatedAt) {
 /* ================================================================
    やりたいこと (wants)
    ローカルストレージキー: wants_v1
-   ※画像(image)はGASに送らずローカルのみで保持する（URL長制限回避のため、現行仕様を維持）
+   ※画像(image)は強めに圧縮(サムネイル品質)した上でGASに保存し、両端末で共有する
 ================================================================ */
-function parseWantsRow(r, localImageMap) {
-  const id = r.id;
+function parseWantsRow(r) {
   return {
-    id, updatedAt: r.updatedAt,
+    id: r.id, updatedAt: r.updatedAt,
     title: r.title, regDate: r.regDate||'', period: r.period||'', url: r.url||'',
     memo: r.memo||'', registrar: r.registrar, status: r.status, doneDate: r.doneDate||null,
     createdAt: r.createdAt||'',
@@ -241,7 +245,7 @@ function parseWantsRow(r, localImageMap) {
     map: r.map||'', cost: r.cost||'',
     desire: Number(r.desire)||0, desireB: Number(r.desireB)||0,
     imgSize: Number(r.imgSize)||120,
-    image: (localImageMap && localImageMap[id]) || '',
+    image: r.image || '',
   };
 }
 function serializeWantsRow(w) {
@@ -251,49 +255,34 @@ function serializeWantsRow(w) {
     createdAt: w.createdAt||'', tags: JSON.stringify(w.tags||[]),
     map: w.map||'', cost: w.cost||'',
     desire: w.desire||0, desireB: w.desireB||0, imgSize: w.imgSize||120,
+    image: w.image||'',
   };
-}
-function loadLocalImageMap() {
-  try { return JSON.parse(localStorage.getItem('wants_images_v1')) || {}; } catch { return {}; }
-}
-function saveLocalImageMap(map) { localStorage.setItem('wants_images_v1', JSON.stringify(map)); }
-function setLocalImage(id, dataUrl) {
-  const map = loadLocalImageMap();
-  if (dataUrl) map[id] = dataUrl; else delete map[id];
-  saveLocalImageMap(map);
 }
 
 async function fetchWants() {
   const rows = await gasList('wants');
-  const imgMap = loadLocalImageMap();
   if (rows === null) {
     try { const c = JSON.parse(localStorage.getItem('wants_v1')); return Array.isArray(c) ? c : []; } catch { return []; }
   }
-  const list = rows.map(r => parseWantsRow(r, imgMap));
+  const list = rows.map(parseWantsRow);
   localStorage.setItem('wants_v1', JSON.stringify(list));
   return list;
 }
 async function createWants(w) {
   const res = await gasCreate('wants', serializeWantsRow(w));
-  if (res && res.ok) {
-    if (w.image) setLocalImage(res.row.id, w.image);
-    return parseWantsRow(res.row, loadLocalImageMap());
-  }
+  if (res && res.ok) return parseWantsRow(res.row);
   return null;
 }
 async function updateWants(id, patch, expectedUpdatedAt) {
-  const res = await gasUpdate('wants', id, serializeWantsRow(Object.assign({id}, patch)), expectedUpdatedAt);
-  if (res && res.ok) {
-    if (patch.image !== undefined) setLocalImage(id, patch.image);
-    return { ok:true, row: parseWantsRow(res.row, loadLocalImageMap()) };
-  }
-  if (res && res.conflict) return { ok:false, conflict:true, row: parseWantsRow(res.current, loadLocalImageMap()) };
+  const res = await gasUpdate('wants', id, serializeWantsRow(Object.assign({id},patch)), expectedUpdatedAt);
+  if (res && res.ok) return { ok:true, row: parseWantsRow(res.row) };
+  if (res && res.conflict) return { ok:false, conflict:true, row: parseWantsRow(res.current) };
   return { ok:false };
 }
 async function deleteWants(id, expectedUpdatedAt) {
   const res = await gasDelete('wants', id, expectedUpdatedAt);
-  if (res && res.ok) { setLocalImage(id, ''); return { ok:true }; }
-  if (res && res.conflict) return { ok:false, conflict:true, row: parseWantsRow(res.current, loadLocalImageMap()) };
+  if (res && res.ok) return { ok:true };
+  if (res && res.conflict) return { ok:false, conflict:true, row: parseWantsRow(res.current) };
   return { ok:false };
 }
 
@@ -350,8 +339,90 @@ async function deletePlan(id, expectedUpdatedAt) {
 }
 
 /* ================================================================
-   共通：保存中UIブロック / エラー表示の補助
+   画像圧縮ヘルパー
+   ・GASスプレッドシートのセル文字数制限(約5万文字)を踏まえ、
+     wants の image はサムネイル品質まで強く圧縮してから保存する。
+   ・最大辺 40px 程度・JPEG品質を落として、Base64でも十分小さく収める。
 ================================================================ */
+function compressImageToThumbnail(src, maxSize=40, quality=0.6) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; } }
+      else { if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; } }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(c.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve('');
+    img.src = src;
+  });
+}
+
+/* ================================================================
+   共有設定 (settings) ―― 記念日など、二人で共有する単一設定
+   ローカルストレージキー: app_settings
+================================================================ */
+function parseSettingsRow(r) {
+  return { id: r.id, updatedAt: r.updatedAt, anniversary: r.anniversary || '' };
+}
+function getSettingsLocal() {
+  try { const d = JSON.parse(localStorage.getItem('app_settings')); if (d) return d; } catch {}
+  return { id:'shared', updatedAt:'', anniversary:'' };
+}
+function saveSettingsLocal(s) { localStorage.setItem('app_settings', JSON.stringify(s)); }
+
+async function fetchSettings() {
+  if (!GAS_ENABLED) return getSettingsLocal();
+  let rows = await gasList('settings');
+  let row = rows && rows.find(r => r.id === 'shared');
+  if (!row) {
+    const res = await gasPost({ action:'bootstrapSettings', sheet:'settings' });
+    if (res && res.ok) row = res.row;
+  }
+  if (row) {
+    const parsed = parseSettingsRow(row);
+    saveSettingsLocal(parsed);
+    return parsed;
+  }
+  return getSettingsLocal();
+}
+/* 戻り値: {ok, conflict, row} */
+async function updateSettings(patch) {
+  const current = getSettingsLocal();
+  const res = await gasUpdate('settings', 'shared', patch, current.updatedAt || '');
+  if (res && res.ok) {
+    const parsed = parseSettingsRow(res.row);
+    saveSettingsLocal(parsed);
+    return { ok:true, row: parsed };
+  }
+  if (res && res.conflict) return { ok:false, conflict:true, row: parseSettingsRow(res.current) };
+  return { ok:false };
+}
+
+/* ================================================================
+   period文字列（例: "2026/4/1" や "2026/4/1〜2026/4/30"）から
+   終了日(Date)を取り出す共通パーサー。
+   ・前後の空白(半角/全角)を許容
+   ・月/日の0埋め有無を許容（正規表現を緩める）
+   ・範囲指定の区切り文字は「〜」「~」のいずれにも対応
+================================================================ */
+function parsePeriodEndDate(period) {
+  if (!period) return null;
+  const cleaned = String(period).trim();
+  if (!cleaned) return null;
+  const parts = cleaned.split(/[〜~]/).map(s => s.trim()).filter(Boolean);
+  const datePattern = /(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/;
+  const target = parts.length >= 2 ? parts[1] : parts[0];
+  if (!target) return null;
+  const m = target.match(datePattern);
+  if (!m) return null;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return isNaN(d.getTime()) ? null : d;
+}
+
 let _busyOverlayEl = null;
 function showBusyOverlay(msg) {
   if (!_busyOverlayEl) {
