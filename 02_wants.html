@@ -761,7 +761,7 @@ function openDetail(id){
     toggleBtn.textContent='↩ 未実行に戻す';toggleBtn.className='ok-btn orange';
     toggleBtn.onclick=async ()=>{
       toggleBtn.disabled=true; showBusyOverlay('保存中…');
-      const res=await updateWants(w.id,{status:'pending',doneDate:null},w.updatedAt);
+      const res=await updateWants(w.id,{status:'pending',doneDate:null},w.updatedAt,w);
       hideBusyOverlay(); toggleBtn.disabled=false;
       if(!res.ok){ await handleConflictOrError(res); closeM('detModal'); render(); return; }
       const idx=items.findIndex(x=>x.id===w.id); if(idx>=0)items[idx]=res.row;
@@ -771,7 +771,7 @@ function openDetail(id){
     toggleBtn.textContent='✅ 実行済みにする';toggleBtn.className='ok-btn green';
     toggleBtn.onclick=async ()=>{
       toggleBtn.disabled=true; showBusyOverlay('保存中…');
-      const res=await updateWants(w.id,{status:'done',doneDate:todayStr()},w.updatedAt);
+      const res=await updateWants(w.id,{status:'done',doneDate:todayStr()},w.updatedAt,w);
       hideBusyOverlay(); toggleBtn.disabled=false;
       if(!res.ok){ await handleConflictOrError(res); closeM('detModal'); render(); return; }
       const idx=items.findIndex(x=>x.id===w.id); if(idx>=0)items[idx]=res.row;
@@ -1049,7 +1049,7 @@ async function submitEdit(){
 
   const btn=document.getElementById('editSubmitBtn'); btn.disabled=true;
   showBusyOverlay('保存中…');
-  const res=await updateWants(w.id, patch, w.updatedAt);
+  const res=await updateWants(w.id, patch, w.updatedAt, w);
   hideBusyOverlay(); btn.disabled=false;
   if(!res.ok){
     await handleConflictOrError(res);

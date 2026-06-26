@@ -273,8 +273,9 @@ async function createWants(w) {
   if (res && res.ok) return parseWantsRow(res.row);
   return null;
 }
-async function updateWants(id, patch, expectedUpdatedAt) {
-  const res = await gasUpdate('wants', id, serializeWantsRow(Object.assign({id},patch)), expectedUpdatedAt);
+async function updateWants(id, patch, expectedUpdatedAt, baseRow) {
+  const row = Object.assign({id}, baseRow||{}, patch);
+  const res = await gasUpdate('wants', id, serializeWantsRow(row), expectedUpdatedAt);
   if (res && res.ok) return { ok:true, row: parseWantsRow(res.row) };
   if (res && res.conflict) return { ok:false, conflict:true, row: parseWantsRow(res.current) };
   return { ok:false };
