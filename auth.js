@@ -235,10 +235,22 @@ async function deletePayment(id, expectedUpdatedAt) {
    ローカルストレージキー: wants_v1
    ※画像(image)は強めに圧縮(サムネイル品質)した上でGASに保存し、両端末で共有する
 ================================================================ */
+function normalizePeriod(period) {
+  if (!period) return '';
+  return period.split('〜').map(p => {
+    const v = (p||'').trim();
+    if (!v) return '';
+    const date = new Date(v);
+    if (!isNaN(date)) {
+      return `${date.getFullYear()}/${String(date.getMonth()+1).padStart(2,'0')}/${String(date.getDate()).padStart(2,'0')}`;
+    }
+    return v;
+  }).join('〜');
+}
 function parseWantsRow(r) {
   return {
     id: r.id, updatedAt: r.updatedAt,
-    title: r.title, regDate: r.regDate||'', period: r.period||'', url: r.url||'',
+    title: r.title, regDate: r.regDate||'', period: normalizePeriod(r.period||''), url: r.url||'',
     memo: r.memo||'', registrar: r.registrar, status: r.status, doneDate: r.doneDate||null,
     createdAt: r.createdAt||'',
     tags: r.tags ? tryParse(r.tags, []) : [],
@@ -247,6 +259,21 @@ function parseWantsRow(r) {
     imgSize: Number(r.imgSize)||120,
     image: r.image || '',
   };
+}
+function loadWantsCache() {
+  try { const c = JSON.parse(localStorage.getItem('wants_v1')); return Array.isArray(c) ? c : []; } catch { return []; }
+}
+function saveWantsCache(list) {
+  try { localStorage.setItem('wants_v1', JSON.stringify(list)); } catch {}
+}
+function mergeWithCache(raw) {
+  const cache = loadWantsCache();
+  const cached = cache.find(item => item.id === raw.id) || {};
+  const merged = Object.assign({}, cached, raw);
+  if ((!merged.image || merged.image === '') && cached.image) merged.image = cached.image;
+  if ((!merged.period || merged.period === '') && cached.period) merged.period = cached.period;
+  if ((!merged.imgSize || merged.imgSize === 0) && cached.imgSize) merged.imgSize = cached.imgSize;
+  return merged;
 }
 function serializeWantsRow(w) {
   return {
@@ -264,19 +291,35 @@ async function fetchWants() {
   if (rows === null) {
     try { const c = JSON.parse(localStorage.getItem('wants_v1')); return Array.isArray(c) ? c : []; } catch { return []; }
   }
-  const list = rows.map(parseWantsRow);
-  localStorage.setItem('wants_v1', JSON.stringify(list));
+  let cache = [];
+  try { const c = JSON.parse(localStorage.getItem('wants_v1')); cache = Array.isArray(c) ? c : []; } catch {}
+  const cacheMap = new Map(cache.map(item => [item.id, item]));
+  const list = rows.map(raw => parseWantsRow(mergeWithCache(raw)));
+  saveWantsCache(list);
   return list;
 }
 async function createWants(w) {
   const res = await gasCreate('wants', serializeWantsRow(w));
-  if (res && res.ok) return parseWantsRow(res.row);
+  if (res && res.ok) {
+    const created = parseWantsRow(res.row);
+    const cache = loadWantsCache().filter(item => item.id !== created.id);
+    cache.push(created);
+    saveWantsCache(cache);
+    return created;
+  }
   return null;
 }
 async function updateWants(id, patch, expectedUpdatedAt, baseRow) {
   const row = Object.assign({id}, baseRow||{}, patch);
   const res = await gasUpdate('wants', id, serializeWantsRow(row), expectedUpdatedAt);
-  if (res && res.ok) return { ok:true, row: parseWantsRow(res.row) };
+  if (res && res.ok) {
+    const mergedRaw = mergeWithCache(Object.assign({}, res.row, {id}));
+    const updated = parseWantsRow(mergedRaw);
+    const cache = loadWantsCache().filter(item => item.id !== id);
+    cache.push(updated);
+    saveWantsCache(cache);
+    return { ok:true, row: updated };
+  }
   if (res && res.conflict) return { ok:false, conflict:true, row: parseWantsRow(res.current) };
   return { ok:false };
 }
