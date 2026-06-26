@@ -24,14 +24,15 @@ html,body{height:100%;background:#c9c9ce;display:flex;justify-content:center;ali
 .tab-pill{padding:9px 18px;border-radius:22px;font-size:14px;font-weight:600;font-family:'Noto Sans JP',sans-serif;border:none;cursor:pointer;transition:background .2s,color .2s;white-space:nowrap}
 .tab-pill.on{background:var(--accent);color:#fff;box-shadow:0 3px 10px rgba(124,122,255,.35)}
 .tab-pill.off{background:#e4e4e9;color:var(--sub)}
-.tab-arrow{display:flex;align-items:center;justify-content:center;width:28px;height:28px;color:var(--muted);flex-shrink:0;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.tab-arrow{width:40px;height:40px;border-radius:50%;border:none;background:#e4e4e9;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:transform .3s cubic-bezier(.34,1.56,.64,1),background .2s}
+.tab-arrow:hover{background:#d9d9dd}
+.tab-arrow img{display:block;width:18px;height:18px}
 .scroll{flex:1;overflow-y:auto;padding:0 14px 20px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .scroll::-webkit-scrollbar{display:none}
 .sec-lbl{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.07em;text-transform:uppercase;padding:14px 2px 6px}
 .sec-lbl-row{display:flex;align-items:center;justify-content:space-between;padding:14px 2px 6px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .sec-lbl-row .sec-lbl{padding:0}
-.sec-toggle-icon{font-size:12px;color:var(--muted);transition:transform .2s,background .2s,color .2s;display:flex;align-items:center;justify-content:center;min-width:40px;height:30px;padding:0 10px;border-radius:999px;background:#e4e4e9}
-.sec-toggle-icon:hover{background:#d9d9dd}
+.sec-toggle-icon{font-size:11px;color:var(--muted);transition:transform .2s;display:inline-block}
 .sec-toggle-icon.collapsed{transform:rotate(-90deg)}
 .c-list{background:var(--card);border-radius:var(--r);overflow:hidden;margin-bottom:6px}
 .c-list.collapsed{display:none}
@@ -129,11 +130,9 @@ input[type=datetime-local]{color-scheme:light}
   </div>
   <div class="tab-bar">
     <button class="tab-pill on" id="tabA" onclick="switchTab('me')"></button>
-    <div class="tab-arrow" id="arrow">
-      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="3" y1="10" x2="17" y2="10"/><polyline points="12 5 17 10 12 15"/>
-      </svg>
-    </div>
+    <button class="tab-arrow" id="arrow" onclick="switchTab(tab==='me'?'partner':'me')" aria-label="タブ切り替え">
+      <img src="photo/矢印ボタン.png" alt="矢印">
+    </button>
     <button class="tab-pill off" id="tabB" onclick="switchTab('partner')"></button>
   </div>
   <div class="scroll" id="scroll"></div>
